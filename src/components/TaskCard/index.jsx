@@ -45,9 +45,7 @@ export default function TaskCard({
       <div className="task-card-meta">
         {assignee ? (
           <span title={assignee.name} className="avatar" style={{ width: 22, height: 22, fontSize: 11 }}>
-            <span className="avatar-block" style={{ background: undefined }}>
-              {assignee.emoji}
-            </span>
+            <span className="avatar-block">{assignee.emoji}</span>
           </span>
         ) : (
           <span className="subtask-count" title="unassigned">⚪</span>
@@ -68,13 +66,6 @@ export default function TaskCard({
             <Paperclip size={11} strokeWidth={2.5} style={{ display: 'inline' }} /> {task.attachments.length}
           </span>
         )}
-        {task.labels.slice(0, 2).map((l) => (
-          <span key={l} className="tag">
-            {l}
-          </span>
-        ))}
-        {task.labels.length > 2 && <span className="subtask-count">+{task.labels.length - 2}</span>}
-        {project?.archived && <span className="tag tag-red">archived</span>}
       </div>
     </article>
   );

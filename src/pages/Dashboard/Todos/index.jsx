@@ -56,14 +56,9 @@ export default function TaskWorkspace({
           </button>
         </div>
         <span className="task-view-note">
-          {view === 'board'
-            ? '✳ drag cards between lanes. double-click a lane name to rename it.'
-            : view === 'list'
-              ? '✳ click a column header to sort. group-by lives in the filter bar.'
-              : '✳ drag tasks between days to reschedule. click a day to spawn a task.'}
           {!perms.can('editTasks') && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginLeft: 10 }}>
-              <Lock size={11} /> read-only mode ({perms.role})
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Lock size={11} /> read-only mode ({perms.role}) — viewers can look, not touch
             </span>
           )}
         </span>

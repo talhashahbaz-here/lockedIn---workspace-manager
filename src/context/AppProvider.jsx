@@ -88,7 +88,7 @@ export function AppProvider({ children }) {
       npcRef.current = setTimeout(() => {
         tick();
         schedule();
-      }, 22000 + Math.random() * 26000);
+      }, 40000 + Math.random() * 40000);
     };
     schedule();
     return () => clearTimeout(npcRef.current);

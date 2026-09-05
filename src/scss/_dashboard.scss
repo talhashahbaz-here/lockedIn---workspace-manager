@@ -270,6 +270,115 @@
 .page-head .page-sub { color: var(--muted); font-size: 14px; margin-top: 6px; }
 .page-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
+/* slim hero — one line, one accent */
+.hero-slim {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: var(--bd);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  padding: 12px 16px;
+  flex-wrap: wrap;
+}
+.hero-bolt {
+  width: 36px;
+  height: 36px;
+  background: var(--accent);
+  border: var(--bd);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.hero-copy-slim {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 200px;
+  h1 { font-size: clamp(17px, 2.2vw, 24px); }
+}
+.hero-role { margin-left: auto; }
+.tag-ink { background: var(--ink); color: var(--bg); }
+.hero-viewer-note { text-decoration: underline; text-underline-offset: 3px; }
+
+/* getting-started checklist */
+.checklist-card { border-left: 8px solid var(--accent); }
+.checklist {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+.checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.checklist-check {
+  width: 22px;
+  height: 22px;
+  border: var(--bd);
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.checklist li.done .checklist-check {
+  background: var(--accent);
+  color: #141414;
+}
+.checklist-label {
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  color: var(--ink);
+  &:hover { text-decoration: underline; text-underline-offset: 3px; }
+  &.done { text-decoration: line-through; opacity: 0.55; }
+}
+
+.stat-grid.stats-3 {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 720px;
+}
+
+/* onboarding wizard */
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: var(--bg);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+.onboarding-card {
+  width: min(560px, 100%);
+  background: var(--surface);
+  border: var(--bd-thick);
+  box-shadow: var(--shadow-lg);
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  .onboarding-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .onboarding-steps {
+    display: flex;
+    gap: 16px;
+    border-bottom: var(--bd);
+    padding-bottom: 10px;
+    span { opacity: 0.45; &.on { opacity: 1; color: var(--ink); } }
+  }
+  h2 { font-size: 26px; }
+}
+
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

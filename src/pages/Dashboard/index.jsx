@@ -7,12 +7,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   Search, Zap, ChevronDown, Plus, Bell, LogOut, Settings as SettingsIcon,
-  RefreshCw, Undo2, Redo2, Sun, Moon, PanelLeftClose, PanelLeft, Menu as MenuIcon,
-  Radio, UserCog,
+  Sun, Moon, PanelLeftClose, PanelLeft, Menu as MenuIcon,
+  UserCog,
 } from 'lucide-react';
 import { MENU_MAIN, MENU_TEAM } from './MenuItems';
 import DashboardRoutes from './Routes';
 import CommandPalette from '@/components/CommandPalette';
+import Onboarding from '@/components/Onboarding';
 import TaskComposer from '@/components/TaskComposer';
 import TaskDetail from '@/components/TaskDetail';
 import BulkBar from '@/components/BulkBar';
@@ -21,12 +22,10 @@ import Avatar from '@/components/Avatar';
 import { useAuth } from '@/context/Auth';
 import { useApp } from '@/context/AppProvider';
 import { ROLE_VIBES } from '@/config/global';
-import { fakeRequest } from '@/config/persistence';
 import { uid } from '@/config/global';
 import {
   workspaceSwitched, mobileNavToggled, sidebarToggled, paletteToggled,
-  settingsPatched, syncStatusSet, toastPushed, detailTaskOpened,
-  workspaceAdded, workspaceUpdated,
+  settingsPatched, toastPushed, workspaceAdded, workspaceUpdated,
 } from '@/store/slices';
 import { selectUnreadCount, selectMyRole, selectProjects, selectUI, selectCurrentWorkspace, selectActor } from '@/store/selectors';
 import Modal from '@/components/Modal';
@@ -194,9 +193,6 @@ function Topbar({ onBurger }) {
   const { confirm } = useApp();
   const unread = useSelector(selectUnreadCount);
   const theme = useSelector((s) => s.ui.settings.theme);
-  const syncStatus = useSelector((s) => s.ui.syncStatus);
-  const canUndo = useSelector((s) => s.data.past.length > 0);
-  const canRedo = useSelector((s) => s.data.future.length > 0);
   const collapsed = useSelector((s) => s.ui.sidebarCollapsed);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -208,13 +204,6 @@ function Topbar({ onBurger }) {
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
   }, []);
-
-  const fakeSync = async () => {
-    dispatch(syncStatusSet('syncing'));
-    await fakeRequest(1500);
-    dispatch(syncStatusSet('idle'));
-    dispatch(toastPushed({ text: 'sync complete. everything was already fine, but it feels official now' }));
-  };
 
   const doLogout = async () => {
     setMenuOpen(false);
@@ -244,21 +233,6 @@ function Topbar({ onBurger }) {
       </button>
 
       <div className="topbar-actions">
-        <button type="button" className="icon-btn" title="undo (⌘Z)" disabled={!canUndo} style={{ opacity: canUndo ? 1 : 0.4 }} onClick={() => dispatch({ type: '@history/undo' })}>
-          <Undo2 size={15} strokeWidth={2.5} />
-        </button>
-        <button type="button" className="icon-btn" title="redo (⌘⇧Z)" disabled={!canRedo} style={{ opacity: canRedo ? 1 : 0.4 }} onClick={() => dispatch({ type: '@history/redo' })}>
-          <Redo2 size={15} strokeWidth={2.5} />
-        </button>
-        <button
-          type="button"
-          className="icon-btn"
-          title="fake a sync"
-          onClick={fakeSync}
-          style={syncStatus === 'syncing' ? { background: 'var(--yellow)' } : undefined}
-        >
-          <RefreshCw size={15} strokeWidth={2.5} className={syncStatus === 'syncing' ? 'spin' : ''} />
-        </button>
         <button
           type="button"
           className="icon-btn"
@@ -371,31 +345,35 @@ export default function Dashboard() {
   const actor = useSelector(selectActor);
   const mobileOpen = useSelector(selectUI).mobileNavOpen;
   const projects = useSelector(selectProjects);
+  const workspaces = useSelector((s) => s.data.present.workspaces);
+  // if the user skipped onboarding but still has no workspace, offer a way back in
+  const [restartOnboarding, setRestartOnboarding] = useState(false);
+  const memberAnywhere = workspaces.some((w) => w.members.some((m) => m.userId === actor?.id));
 
   // make sure a workspace is always selected
   useEffect(() => {
     if (!ws) {
-      const first = projects.length
-        ? projects[0].workspaceId
-        : null;
+      const first = projects.length ? projects[0].workspaceId : null;
       if (first) dispatch(workspaceSwitched(first));
     }
   }, [ws, projects, dispatch]);
 
-  if (actor && !ws) {
+  if (actor && !memberAnywhere) {
     return (
       <div className="app-shell">
-        <div className="page" style={{ margin: 'auto', maxWidth: 460 }}>
-          <div className="empty-state">
-            <div className="empty-emoji">🫥</div>
-            <h4 className="empty-title">you are in zero workspaces</h4>
-            <p className="empty-sub">
-              this can happen if your session switched profiles. the app seeded some data — log
-              back in as a mock user to hop into their world.
-            </p>
-            <Link to="/login" className="btn btn-accent">back to login</Link>
+        <Onboarding key={restartOnboarding ? 'restart' : 'first'} user={actor} />
+        {restartOnboarding ? null : (
+          <div className="page" style={{ margin: 'auto', maxWidth: 480 }}>
+            <div className="empty-state">
+              <div className="empty-emoji">🫥</div>
+              <h4 className="empty-title">you are not in any workspace yet</h4>
+              <p className="empty-sub">it takes about 20 seconds to set up. name a space, pick a template, done.</p>
+              <button type="button" className="btn btn-accent" onClick={() => setRestartOnboarding(true)}>
+                set up my workspace
+              </button>
+            </div>
           </div>
-        </div>
+        )}
         <Toaster />
       </div>
     );

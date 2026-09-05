@@ -169,7 +169,7 @@ export default function BoardView({ project }) {
               )}
               <span className="board-col-count">{colTasks.length}</span>
               {perms.can('manageProjects') && (
-                <span className="row-gap-6">
+                <span className="row-gap-6 col-actions">
                   <button type="button" className="icon-btn icon-btn-sm" title="rename column" onClick={() => { setRenaming(col.id); setRenameText(col.title); }}>
                     <Pencil size={11} strokeWidth={2.5} />
                   </button>
@@ -244,7 +244,7 @@ export default function BoardView({ project }) {
                   </div>
                 </div>
               ) : perms.can('editTasks') ? (
-                <button type="button" className="btn btn-sm btn-block" onClick={() => { setComposer(col.id); setComposerText(''); }}>
+                <button type="button" className="btn btn-sm btn-block board-add-btn" onClick={() => { setComposer(col.id); setComposerText(''); }}>
                   <Plus size={12} strokeWidth={2.5} /> add task
                 </button>
               ) : null}

@@ -71,47 +71,45 @@ function runNpcEvent(dispatch, state) {
   const candidates = ws.members.filter((m) => m.userId !== actorId);
   if (!candidates.length || !wsTasks.length) return;
 
-  const npc = candidates[Math.floor(Math.random() * candidates.length)];
-  const npcId = npc.userId;
-  const npcName = state.data.present.users.find((u) => u.id === npcId)?.name ?? 'the intern';
-  const task = wsTasks[Math.floor(Math.random() * wsTasks.length)];
-  const roll = Math.random();
+    const npc = candidates[Math.floor(Math.random() * candidates.length)];
+    const npcId = npc.userId;
+    const npcName = state.data.present.users.find((u) => u.id === npcId)?.name ?? 'the intern';
+    const task = wsTasks[Math.floor(Math.random() * wsTasks.length)];
+    const roll = Math.random();
 
-  const base = { workspaceId: ws.id, projectId: task.projectId, taskId: task.id };
+    const base = { workspaceId: ws.id, projectId: task.projectId, taskId: task.id };
 
-  if (roll < 0.45) {
-    // npc comments
-    let body = NPC_COMMENTS[Math.floor(Math.random() * NPC_COMMENTS.length)];
-    const mentions = [];
-    if (Math.random() < 0.4 && actorId) {
-      body = `@you ${body}`;
-      mentions.push(actorId);
-    }
-    dispatch({
-      type: 'data/commentAdded',
-      payload: { id: uid('c'), taskId: task.id, projectId: task.projectId, authorId: npcId, body, mentions, createdAt: new Date().toISOString() },
-    });
-    pushActivity(dispatch, state, { ...base, actorId: npcId, type: 'comment', text: `said: "${body.slice(0, 46)}${body.length > 46 ? '…' : ''}"` });
-    if (mentions.includes(actorId)) {
-      pushNotification(dispatch, state, actorId, 'mentioned', `${npcName} mentioned you on "${task.title}"`, task.id);
-      dispatch(toastPushed({ tone: 'live', text: `live: ${npcName} @'d you on "${task.title}"` }));
-    } else {
-      dispatch(toastPushed({ tone: 'live', text: `live: ${npcName} commented on "${task.title}"` }));
-    }
-  } else if (roll < 0.75) {
-    // npc moves a task to a different column
-    const project = state.data.present.projects.find((p) => p.id === task.projectId);
-    const others = project.columns.filter((c) => c.id !== task.columnId);
-    if (!others.length) return;
-    const dest = others[Math.floor(Math.random() * others.length)];
-    dispatch({
-      type: 'data/taskPatched',
-      payload: { id: task.id, patch: { columnId: dest.id } },
-      meta: { actorId: npcId },
-    });
-    pushActivity(dispatch, state, { ...base, actorId: npcId, type: 'task', text: `moved "${task.title}" → ${dest.title}` });
-    dispatch(toastPushed({ tone: 'live', text: `live: ${npcName} moved "${task.title}" → ${dest.title}` }));
-  } else if (roll < 0.9 && task.subtasks.length) {
+    if (roll < 0.45) {
+      // npc comments
+      let body = NPC_COMMENTS[Math.floor(Math.random() * NPC_COMMENTS.length)];
+      const mentions = [];
+      if (Math.random() < 0.4 && actorId) {
+        body = `@you ${body}`;
+        mentions.push(actorId);
+      }
+      dispatch({
+        type: 'data/commentAdded',
+        payload: { id: uid('c'), taskId: task.id, projectId: task.projectId, authorId: npcId, body, mentions, createdAt: new Date().toISOString() },
+      });
+      pushActivity(dispatch, state, { ...base, actorId: npcId, type: 'comment', text: `said: "${body.slice(0, 46)}${body.length > 46 ? '…' : ''}"` });
+      // toast only when YOU are mentioned — everything else lives in the feed
+      if (mentions.includes(actorId)) {
+        pushNotification(dispatch, state, actorId, 'mentioned', `${npcName} mentioned you on "${task.title}"`, task.id);
+        dispatch(toastPushed({ tone: 'live', text: `live: ${npcName} @'d you on "${task.title}"` }));
+      }
+    } else if (roll < 0.75) {
+      // npc moves a task to a different column
+      const project = state.data.present.projects.find((p) => p.id === task.projectId);
+      const others = project.columns.filter((c) => c.id !== task.columnId);
+      if (!others.length) return;
+      const dest = others[Math.floor(Math.random() * others.length)];
+      dispatch({
+        type: 'data/taskPatched',
+        payload: { id: task.id, patch: { columnId: dest.id } },
+        meta: { actorId: npcId },
+      });
+      pushActivity(dispatch, state, { ...base, actorId: npcId, type: 'task', text: `moved "${task.title}" → ${dest.title}` });
+    } else if (roll < 0.9 && task.subtasks.length) {
     // npc checks off a subtask
     const open = task.subtasks.filter((s) => !s.done);
     if (!open.length) return;

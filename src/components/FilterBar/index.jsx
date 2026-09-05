@@ -18,6 +18,8 @@ export default function FilterBar({ columns = [], members = [], showGroupBy = fa
   const wsId = useSelector(selectCurrentWorkspaceId);
   const [naming, setNaming] = useState(false);
   const [presetName, setPresetName] = useState('');
+  // collapsed by default — one quiet row until you ask for power tools
+  const [expanded, setExpanded] = useState(false);
 
   // union columns by title so global views can filter across projects
   const titleMap = new Map();
@@ -50,11 +52,18 @@ export default function FilterBar({ columns = [], members = [], showGroupBy = fa
   };
 
   return (
-    <div className="filter-bar">
+    <div className={`filter-bar ${expanded ? 'expanded' : ''}`}>
       <div className="filter-row">
-        <span className="mono-label" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <SlidersHorizontal size={13} strokeWidth={2.5} /> filters {activeCount > 0 && `(${activeCount})`}
-        </span>
+        <button
+          type="button"
+          className={`filter-toggle ${activeCount > 0 ? 'on' : ''}`}
+          onClick={() => setExpanded((v) => !v)}
+          title="show filters"
+        >
+          <SlidersHorizontal size={13} strokeWidth={2.5} />
+          filters
+          {activeCount > 0 && <span className="filter-badge">{activeCount}</span>}
+        </button>
         <input
           className="input filter-input-sm"
           placeholder="search tasks…"
@@ -105,133 +114,140 @@ export default function FilterBar({ columns = [], members = [], showGroupBy = fa
         )}
         {typeof count === 'number' && (
           <span className="filter-count-note">
-            {count}/{totalCount} tasks
+            {count}/{totalCount}
           </span>
         )}
       </div>
 
-      <div className="filter-row">
-        <div className="filter-chips">
-          {members.map((u) => (
-            <button
-              key={u.id}
-              type="button"
-              className={`filter-chip ${filters.assigneeIds.includes(u.id) ? 'on' : ''}`}
-              onClick={() => dispatch(filtersPatched({ assigneeIds: toggleIn(filters.assigneeIds, u.id) }))}
-            >
-              {u.emoji} {u.name.split(' ')[0]}
-            </button>
-          ))}
-          <button
-            type="button"
-            className={`filter-chip ${filters.assigneeIds.includes('unassigned') ? 'on' : ''}`}
-            onClick={() => dispatch(filtersPatched({ assigneeIds: toggleIn(filters.assigneeIds, 'unassigned') }))}
-          >
-            ⚪ unassigned
-          </button>
-        </div>
-      </div>
-
-      <div className="filter-row">
-        <div className="filter-chips">
-          {PRIORITIES.map((p) => (
-            <button
-              key={p.id}
-              type="button"
-              className={`filter-chip ${filters.priorities.includes(p.id) ? 'on' : ''}`}
-              onClick={() => dispatch(filtersPatched({ priorities: toggleIn(filters.priorities, p.id) }))}
-            >
-              {p.label}
-            </button>
-          ))}
-          <span className="filter-chip-sep" aria-hidden>·</span>
-          {[...titleMap.keys()].map((title) => {
-            const ids = titleMap.get(title);
-            const on = ids.every((id) => filters.statuses.includes(id));
-            return (
-              <button
-                key={title}
-                type="button"
-                className={`filter-chip ${on ? 'on' : ''}`}
-                onClick={() => toggleStatusTitle(title)}
-              >
-                ▦ {title}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="filter-row">
-        <div className="filter-chips">
-          {LABEL_POOL.map((l) => (
-            <button
-              key={l}
-              type="button"
-              className={`filter-chip ${filters.labels.includes(l) ? 'on' : ''}`}
-              onClick={() => dispatch(filtersPatched({ labels: toggleIn(filters.labels, l) }))}
-            >
-              #{l}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="filter-row">
-        <span className="mono-label">due between</span>
-        <input
-          className="input filter-input-sm"
-          type="date"
-          value={filters.dueFrom ?? ''}
-          onChange={(e) => dispatch(filtersPatched({ dueFrom: e.target.value || null }))}
-        />
-        <span className="mono-label">and</span>
-        <input
-          className="input filter-input-sm"
-          type="date"
-          value={filters.dueTo ?? ''}
-          onChange={(e) => dispatch(filtersPatched({ dueTo: e.target.value || null }))}
-        />
-        <span className="spacer" />
-        {presets.length > 0 && (
-          <div className="filter-chips">
-            {presets.map((p) => (
-              <span key={p.id} className="preset-chip">
+      {expanded && (
+        <>
+          <div className="filter-row">
+            <div className="filter-chips">
+              {members.map((u) => (
                 <button
+                  key={u.id}
                   type="button"
-                  onClick={() => {
-                    dispatch(filtersPatched(p.filters));
-                    dispatch(sortSet(p.sort));
-                  }}
+                  className={`filter-chip ${filters.assigneeIds.includes(u.id) ? 'on' : ''}`}
+                  onClick={() => dispatch(filtersPatched({ assigneeIds: toggleIn(filters.assigneeIds, u.id) }))}
                 >
-                  ⚡ {p.name}
+                  {u.emoji} {u.name.split(' ')[0]}
                 </button>
-                <button type="button" title="delete preset" onClick={() => dispatch(presetDeleted(p.id))}>
-                  <X size={11} strokeWidth={2.5} />
-                </button>
-              </span>
-            ))}
+              ))}
+              <button
+                type="button"
+                className={`filter-chip ${filters.assigneeIds.includes('unassigned') ? 'on' : ''}`}
+                onClick={() => dispatch(filtersPatched({ assigneeIds: toggleIn(filters.assigneeIds, 'unassigned') }))}
+              >
+                ⚪ unassigned
+              </button>
+            </div>
           </div>
-        )}
-        {naming ? (
-          <span className="row-gap-6">
+
+          <div className="filter-row">
+            <div className="filter-chips">
+              {PRIORITIES.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`filter-chip ${filters.priorities.includes(p.id) ? 'on' : ''}`}
+                  onClick={() => dispatch(filtersPatched({ priorities: toggleIn(filters.priorities, p.id) }))}
+                >
+                  {p.label}
+                </button>
+              ))}
+              {[...titleMap.keys()].map((title) => {
+                const ids = titleMap.get(title);
+                const on = ids.every((id) => filters.statuses.includes(id));
+                return (
+                  <button
+                    key={title}
+                    type="button"
+                    className={`filter-chip ${on ? 'on' : ''}`}
+                    onClick={() => toggleStatusTitle(title)}
+                  >
+                    ▦ {title}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="filter-row">
+            <div className="filter-chips">
+              {LABEL_POOL.map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  className={`filter-chip ${filters.labels.includes(l) ? 'on' : ''}`}
+                  onClick={() => dispatch(filtersPatched({ labels: toggleIn(filters.labels, l) }))}
+                >
+                  #{l}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="filter-row">
+            <span className="mono-label">due between</span>
             <input
               className="input filter-input-sm"
-              autoFocus
-              placeholder="preset name"
-              value={presetName}
-              onChange={(e) => setPresetName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && savePreset()}
+              type="date"
+              value={filters.dueFrom ?? ''}
+              onChange={(e) => dispatch(filtersPatched({ dueFrom: e.target.value || null }))}
             />
-            <button type="button" className="btn btn-sm btn-accent" onClick={savePreset}>save</button>
-            <button type="button" className="btn btn-sm" onClick={() => setNaming(false)}>nah</button>
-          </span>
-        ) : (
-          <button type="button" className="btn btn-sm" onClick={() => setNaming(true)}>
-            <Save size={12} strokeWidth={2.5} /> save preset
-          </button>
-        )}
-      </div>
+            <span className="mono-label">and</span>
+            <input
+              className="input filter-input-sm"
+              type="date"
+              value={filters.dueTo ?? ''}
+              onChange={(e) => dispatch(filtersPatched({ dueTo: e.target.value || null }))}
+            />
+            <span className="spacer" />
+            {naming ? (
+              <span className="row-gap-6">
+                <input
+                  className="input filter-input-sm"
+                  autoFocus
+                  placeholder="preset name"
+                  value={presetName}
+                  onChange={(e) => setPresetName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && savePreset()}
+                />
+                <button type="button" className="btn btn-sm btn-accent" onClick={savePreset}>save</button>
+                <button type="button" className="btn btn-sm" onClick={() => setNaming(false)}>nah</button>
+              </span>
+            ) : (
+              <button type="button" className="btn btn-sm" onClick={() => setNaming(true)}>
+                <Save size={12} strokeWidth={2.5} /> save preset
+              </button>
+            )}
+          </div>
+
+          {presets.length > 0 && (
+            <div className="filter-row">
+              <span className="mono-label">presets</span>
+              <div className="filter-chips">
+                {presets.map((p) => (
+                  <span key={p.id} className="preset-chip">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        dispatch(filtersPatched(p.filters));
+                        dispatch(sortSet(p.sort));
+                      }}
+                    >
+                      ⚡ {p.name}
+                    </button>
+                    <button type="button" title="delete preset" onClick={() => dispatch(presetDeleted(p.id))}>
+                      <X size={11} strokeWidth={2.5} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
