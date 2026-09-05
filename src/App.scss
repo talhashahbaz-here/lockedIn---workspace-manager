@@ -1,0 +1,8 @@
+/* App.scss — pulls in the whole design system. order matters: tokens first. */
+
+@use './scss/bootstrap';
+@use './scss/screen-loader';
+@use './scss/auth';
+@use './scss/frontend';
+@use './scss/dashboard';
+@use './scss/components';
