@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import Modal from '../Modal';
 import Avatar from '../Avatar';
-import { uid, PRIORITIES, friendlyDate, timeAgo } from '@/config/global';
+import { uid, PRIORITIES, friendlyDate, timeAgo, toDateInputValue } from '@/config/global';
 import {
   taskPatched, taskDeleted, deleteTaskOptimistic, taskDuplicated,
   subtaskAdded, subtaskDeleted, subtaskToggled, subtaskRenamed,
@@ -435,7 +435,7 @@ export default function TaskDetail() {
             </label>
             <label className="field">
               <span className="mono-label">due date</span>
-              <input className="input" type="date" value={task.dueDate ?? ''} disabled={!canEdit} onChange={(e) => patch({ dueDate: e.target.value || null })} />
+              <input className="input" type="date" value={toDateInputValue(task.dueDate)} disabled={!canEdit} onChange={(e) => patch({ dueDate: e.target.value || null })} />
             </label>
           </div>
 

@@ -161,6 +161,13 @@ export const dayKey = (d) => {
   return `${dt.getFullYear()}-${m}-${day}`;
 };
 
+// <input type="date"> only accepts yyyy-mm-dd — task dates may be stored as
+// full ISO timestamps, so normalize before binding (local timezone, like dayKey)
+export const toDateInputValue = (d) => {
+  if (!d) return '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : dayKey(d);
+};
+
 export const isOverdue = (dueDate) =>
   Boolean(dueDate) && new Date(dueDate).setHours(23, 59, 59, 999) < Date.now();
 
