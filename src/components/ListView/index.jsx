@@ -9,7 +9,7 @@ import { taskCheckToggled } from '@/store/state-helpers';
 import { groupTasks } from '@/store/selectors';
 import Avatar from '../Avatar';
 
-export default function ListView({ tasks, users, project, groupBy }) {
+export default function ListView({ tasks, users, project, columns: columnsProp = [], groupBy }) {
   const dispatch = useDispatch();
   const sort = useSelector((s) => s.ui.sort);
   const [collapsed, setCollapsed] = useState({});
@@ -25,7 +25,7 @@ export default function ListView({ tasks, users, project, groupBy }) {
     [tasks, groupBy, users, project]
   );
 
-  const columns = project?.columns ?? [];
+  const columns = project?.columns ?? columnsProp;
 
   const renderRow = (t) => {
     const assignee = users.find((u) => u.id === t.assigneeId);

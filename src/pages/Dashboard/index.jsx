@@ -4,13 +4,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   Search, Zap, ChevronDown, Plus, Bell, LogOut, Settings as SettingsIcon,
   RefreshCw, Undo2, Redo2, Sun, Moon, PanelLeftClose, PanelLeft, Menu as MenuIcon,
   Radio, UserCog,
 } from 'lucide-react';
 import { MENU_MAIN, MENU_TEAM } from './MenuItems';
+import DashboardRoutes from './Routes';
 import CommandPalette from '@/components/CommandPalette';
 import TaskComposer from '@/components/TaskComposer';
 import TaskDetail from '@/components/TaskDetail';
@@ -406,7 +407,7 @@ export default function Dashboard() {
       {mobileOpen && <div className="mobile-overlay" onClick={() => dispatch(mobileNavToggled(false))} />}
       <div className="app-main">
         <Topbar onBurger={() => dispatch(mobileNavToggled(true))} />
-        <Outlet />
+        <DashboardRoutes />
       </div>
 
       <CommandPalette />

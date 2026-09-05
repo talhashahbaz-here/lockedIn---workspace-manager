@@ -243,6 +243,7 @@ export default function TaskDetail() {
   const [tab, setTab] = useState('details');
   const [subDraft, setSubDraft] = useState('');
   const [promoteTarget, setPromoteTarget] = useState('');
+  const attachmentsInput = useRef(null);
 
   useEffect(() => {
     setTab('details');
@@ -328,8 +329,6 @@ export default function TaskDetail() {
     dispatch(toastPushed({ tone: 'undo', text: `"${task.title}" demoted to subtask`, action: { label: 'undo', type: '@history/undo' } }));
     dispatch(detailTaskClosed());
   };
-
-  const attachmentsInput = useRef(null);
 
   const addFiles = (fileList) => {
     Array.from(fileList).forEach((file) => {

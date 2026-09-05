@@ -20,7 +20,7 @@ export const NPC_TICK = 'app/npcTick';
 
 /* ------------------------------- undo marker ------------------------------- */
 
-const undoMarker = () => (next) => (action) => {
+const undoMarker = () => () => (next) => (action) => {
   if (action && typeof action.type === 'string' && UNDOABLE_TYPES.has(action.type)) {
     return next({ ...action, meta: { ...action.meta, undoable: true } });
   }

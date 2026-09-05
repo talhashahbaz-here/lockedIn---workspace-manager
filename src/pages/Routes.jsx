@@ -54,17 +54,15 @@ export default function AppRoutes() {
         <Route index element={<ForgotPassword />} />
       </Route>
 
-      {/* the app itself */}
+      {/* the app itself — splat so the dashboard hosts its own nested <Routes> */}
       <Route
-        path="/app"
+        path="/app/*"
         element={
           <PrivateRoute>
             <Dashboard />
           </PrivateRoute>
         }
-      >
-        <Route path="*" element={<DashboardRoutes />} />
-      </Route>
+      />
 
       <Route path="/home" element={<Navigate to="/" replace />} />
       <Route path="*" element={<PageNotFound />} />

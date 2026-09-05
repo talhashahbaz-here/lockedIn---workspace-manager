@@ -80,7 +80,7 @@ export default function TaskWorkspace({
       ) : view === 'calendar' ? (
         <CalendarView tasks={tasks} users={users} />
       ) : (
-        <ListView tasks={tasks} users={users} project={project} groupBy={groupBy} />
+        <ListView tasks={tasks} users={users} project={project} columns={columns} groupBy={groupBy} />
       )}
     </div>
   );

@@ -1,7 +1,8 @@
-/* Login — fake credential check against local mock users. */
+/* Login — fake credential check against local mock users.
+   also accepts ?as=<userId> for one-tap demo deep links. */
 
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '@/context/Auth';
 import { useSelector } from 'react-redux';
@@ -14,11 +15,25 @@ export default function Login() {
   const users = useSelector(selectUsers);
   const navigate = useNavigate();
   const location = useLocation();
+  const [params] = useSearchParams();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const deepLinkFired = useRef(false);
 
   const from = location.state?.from ?? '/app';
+
+  // ?as=<userId> — the demo speedrun button, also used for testing deep links
+  useEffect(() => {
+    const as = params.get('as');
+    if (!as || deepLinkFired.current || !users.length) return;
+    const u = users.find((x) => x.id === as || x.email === as);
+    if (u) {
+      deepLinkFired.current = true;
+      switchUser(u.id);
+      navigate(from, { replace: true });
+    }
+  }, [params, users, switchUser, navigate, from]);
 
   const submit = async (e) => {
     e.preventDefault();

@@ -11,7 +11,7 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { STORAGE_KEYS, dayKey, isDueSoon } from '@/config/global';
-import { lsGet } from '@/config/persistence';
+import { lsGet, lsSet } from '@/config/persistence';
 import { onlineSet, toastPushed, detailTaskClosed, composerOpened } from '@/store/slices/uiSlice';
 import { notificationPushed } from '@/store/slices/logSlice';
 import { NPC_TICK } from '@/store';

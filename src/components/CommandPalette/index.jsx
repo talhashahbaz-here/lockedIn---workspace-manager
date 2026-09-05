@@ -70,17 +70,17 @@ export default function CommandPalette() {
     ];
     actions.forEach((a) => push('actions', a));
 
-    const state = window.__STORE__ ?? null;
+    const state = window.__STORE__?.getState?.() ?? null;
     if (q.trim() && state) {
       const found = globalSearch(state, q);
       found.workspaces.forEach((w) =>
-        push('workspaces', { id: `ws-${w.id}`, label: `${w.emoji} ${w.name}`, run: () => navigate('/app/home') })
+        push('workspaces', { id: `ws-${w.id}`, icon: Home, label: `${w.emoji} ${w.name}`, run: () => navigate('/app/home') })
       );
       found.projects.forEach((p) =>
-        push('projects', { id: `pr-${p.id}`, label: `${p.emoji} ${p.name}`, run: () => navigate(`/app/project/${p.id}`) })
+        push('projects', { id: `pr-${p.id}`, icon: FolderKanban, label: `${p.emoji} ${p.name}`, run: () => navigate(`/app/project/${p.id}`) })
       );
       found.tasks.forEach((t) =>
-        push('tasks', { id: `tk-${t.id}`, label: t.title, run: () => dispatch({ type: 'ui/detailTaskOpened', payload: t.id }) })
+        push('tasks', { id: `tk-${t.id}`, icon: ListChecks, label: t.title, run: () => dispatch({ type: 'ui/detailTaskOpened', payload: t.id }) })
       );
     }
 
