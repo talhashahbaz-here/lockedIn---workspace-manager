@@ -1,4 +1,4 @@
-/* ConfirmDialog — "this is permanent fr fr" gate for destructive actions. */
+/* ConfirmDialog — confirmation gate for destructive actions. */
 
 import { AlertTriangle } from 'lucide-react';
 import Modal from '../Modal';
@@ -6,10 +6,10 @@ import Modal from '../Modal';
 export default function ConfirmDialog({
   open,
   onSettle,
-  title = 'you sure about this?',
-  body = 'this action cannot be undone. and we mean it.',
-  confirmText = 'yeet it',
-  cancelText = 'nah, i bugged',
+  title = 'Are you sure?',
+  body = 'This action cannot be undone.',
+  confirmText = 'Delete',
+  cancelText = 'Cancel',
   danger = true,
 }) {
   return (

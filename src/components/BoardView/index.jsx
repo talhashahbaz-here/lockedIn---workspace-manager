@@ -80,7 +80,7 @@ export default function BoardView({ project }) {
         columnId,
         title,
         description: '',
-        priority: 'mid',
+        priority: 'medium',
         dueDate: null,
         assigneeId: null,
         labels: [],
@@ -101,8 +101,8 @@ export default function BoardView({ project }) {
     const ok = await confirm({
       title: `delete "${col.title}"?`,
       body: count
-        ? `${count} task(s) in it will bounce to the first remaining column. they will be fine.`
-        : 'the column is empty. it will not be missed.',
+        ? `${count} task(s) in it will move to the first remaining column.`
+        : 'This column is empty.',
       confirmText: 'delete column',
     });
     if (ok) dispatch(columnDeleted({ projectId: project.id, columnId: col.id }));
@@ -185,7 +185,7 @@ export default function BoardView({ project }) {
             <div className="board-col-body">
               {colTasks.length === 0 && composer !== col.id && (
                 <div className="mono-label" style={{ textAlign: 'center', padding: '14px 0', border: '2px dashed var(--muted)' }}>
-                  {drag ? 'drop it here 👀' : 'crickets'}
+                  {drag ? 'Drop tasks here' : 'No tasks'}
                 </div>
               )}
               {colTasks.map((t, i) => (
@@ -261,7 +261,7 @@ export default function BoardView({ project }) {
             onClick={() =>
               dispatch(columnAdded({
                 projectId: project.id,
-                column: { id: uid('col'), title: `new lane ${project.columns.length + 1}` },
+                column: { id: uid('col'), title: `new column ${project.columns.length + 1}` },
               }))
             }
           >

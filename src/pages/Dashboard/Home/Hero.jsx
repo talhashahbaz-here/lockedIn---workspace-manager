@@ -13,7 +13,7 @@ export default function Hero() {
   const ws = useSelector(selectCurrentWorkspace);
   const role = useSelector(selectMyRole);
   const hour = new Date().getHours();
-  const greeting = hour < 5 ? 'still up?' : hour < 12 ? 'gm' : hour < 18 ? 'locked in hours' : 'evening grind';
+  const greeting = hour < 5 ? 'working late?' : hour < 12 ? 'good morning' : hour < 18 ? 'good afternoon' : 'good evening';
 
   return (
     <div className="hero-slim">

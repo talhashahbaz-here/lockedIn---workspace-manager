@@ -1,4 +1,4 @@
-/* EmptyState — for the "it is giving... nothing" moments. */
+/* EmptyState — shown when a list has nothing to render. */
 
 export default function EmptyState({ emoji = '🕳️', title, sub, children, compact = false }) {
   return (

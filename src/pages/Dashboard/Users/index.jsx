@@ -51,11 +51,11 @@ export default function Users() {
 
   const setRole = (member, role) => {
     if (!roleCan(perms.role, 'assignRoles')) {
-      dispatch(toastPushed({ tone: 'warn', text: 'only the owner can switch roles. the hierarchy is real.' }));
+      dispatch(toastPushed({ tone: 'warn', text: 'Only the owner can change roles.' }));
       return;
     }
     if (member.userId === actorId) {
-      dispatch(toastPushed({ tone: 'warn', text: 'demoting yourself? bold. not today.' }));
+      dispatch(toastPushed({ tone: 'warn', text: 'You cannot change your own role.' }));
       return;
     }
     dispatch(memberRoleChanged({ workspaceId: ws.id, userId: member.userId, role }));
@@ -64,12 +64,12 @@ export default function Users() {
 
   const removeMember = async (member) => {
     if (!roleCan(perms.role, 'removeMembers')) {
-      dispatch(toastPushed({ tone: 'warn', text: 'only the owner can remove members. boundaries.' }));
+      dispatch(toastPushed({ tone: 'warn', text: 'Only the owner can remove members.' }));
       return;
     }
     const ok = await confirm({
       title: `remove ${member.user.name}?`,
-      body: 'they lose access instantly. their assigned tasks stay, just unowned emotionally.',
+      body: 'They will lose access immediately. Their assigned tasks remain.',
       confirmText: 'remove them',
     });
     if (ok) {
@@ -94,8 +94,8 @@ export default function Users() {
         <div>
           <h1>members</h1>
           <p className="page-sub">
-            {ws.emoji} {ws.name} — {members.length} human(s), {projects.length} active project(s).
-            roles decide who can actually do things.
+            {ws.emoji} {ws.name} — {members.length} members · {projects.length} active projects.
+            Roles decide who can edit and manage.
           </p>
         </div>
         <div className="page-actions">
@@ -149,14 +149,14 @@ export default function Users() {
       </div>
 
       {members.length === 0 && (
-        <EmptyState emoji="👥" title="nobody here" sub="ghost workspace. invite some mock users to make it a party." />
+        <EmptyState emoji="👥" title="No members" sub="Invite some mock users to get started." />
       )}
 
       {/* permission matrix */}
       <section className="home-panel">
         <div className="home-panel-head">
           <h3>🔐 who can do what</h3>
-          <span className="mono-label">simulated client-side. vibes enforced.</span>
+          <span className="mono-label">Simulated client-side.</span>
         </div>
         <div className="task-table-wrap">
           <table className="task-table" style={{ minWidth: 520 }}>
@@ -184,12 +184,12 @@ export default function Users() {
         </div>
         <span className="task-view-note">
           ✳ switch to a different mock profile (log out → hop into another user) to feel the
-          permission-gated ui from the other side. viewers get the full museum tour.
+          permission-gated UI from another role's perspective.
         </span>
       </section>
 
       {inviting && (
-        <Modal open onClose={() => setInviting(false)} eyebrow="invite (fake)" title="pull someone in" width={460}>
+        <Modal open onClose={() => setInviting(false)} eyebrow="invite (simulated)" title="Add a member" width={460}>
           <form className="stack-16" onSubmit={invite}>
             <label className="field">
               <span className="mono-label">who</span>
@@ -199,7 +199,7 @@ export default function Users() {
                 onChange={(e) => setInviteForm({ ...inviteForm, userId: e.target.value })}
                 autoFocus
               >
-                <option value="">pick a mock user…</option>
+                <option value="">Pick a user…</option>
                 {candidates.map((u) => (
                   <option key={u.id} value={u.id}>{u.emoji} {u.name} — {u.email}</option>
                 ))}
@@ -218,7 +218,7 @@ export default function Users() {
               </select>
             </label>
             {candidates.length === 0 && (
-              <div className="access-denied">everyone is already in this workspace. popular.</div>
+              <div className="access-denied">Everyone is already in this workspace.</div>
             )}
             <div className="row" style={{ justifyContent: 'flex-end' }}>
               <button type="button" className="btn" onClick={() => setInviting(false)}>nah</button>

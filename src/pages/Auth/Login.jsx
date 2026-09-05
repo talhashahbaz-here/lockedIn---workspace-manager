@@ -23,7 +23,7 @@ export default function Login() {
 
   const from = location.state?.from ?? '/app';
 
-  // ?as=<userId> — the demo speedrun button, also used for testing deep links
+  // ?as=<userId> — one-tap demo login, also used for testing deep links
   useEffect(() => {
     const as = params.get('as');
     if (!as || deepLinkFired.current || !users.length) return;
@@ -54,10 +54,10 @@ export default function Login() {
       <div className="auth-card">
         <div>
           <span className="mono-label">welcome back</span>
-          <h2>you know the drill.</h2>
+          <h2>Welcome back.</h2>
         </div>
         <p className="auth-sub">
-          email + password. if it matches a local mock account, you are in. simple.
+          Email and password are checked against local mock accounts.
         </p>
         {error && <div className="auth-error">⚠ {error}</div>}
         <form className="auth-form" onSubmit={submit}>
@@ -84,20 +84,20 @@ export default function Login() {
             />
           </label>
           <button type="submit" className="btn btn-accent btn-block" disabled={busy}>
-            <LogIn size={15} strokeWidth={2.5} /> {busy ? 'checking…' : 'let me in'}
+            <LogIn size={15} strokeWidth={2.5} /> {busy ? 'checking…' : 'Log in'}
           </button>
         </form>
         <div className="auth-alt">
-          forgot your password? <Link to="/forgot-password">tragic, click here</Link>
+          Forgot your password? <Link to="/forgot-password">Reset it</Link>
         </div>
         <div className="auth-alt">
-          new here? <Link to="/register">make it official</Link>
+          New here? <Link to="/register">Create an account</Link>
         </div>
       </div>
 
       <div className="auth-quick">
         <div className="auth-quick-card">
-          <span className="mono-label">lazy? speedrun it — hop in as a mock user</span>
+          <span className="mono-label">Quick demo — hop in as a mock user</span>
           <div className="quick-users">
             {users.slice(0, 6).map((u) => (
               <button

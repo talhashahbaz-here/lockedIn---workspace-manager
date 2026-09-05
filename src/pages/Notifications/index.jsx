@@ -10,7 +10,7 @@ import { settingsPatched, detailTaskOpened, toastPushed } from '@/store/slices/u
 import { selectMyNotifications, selectUnreadCount, selectActorId } from '@/store/selectors';
 import { timeAgo } from '@/config/global';
 
-const TYPE_TAG = { assigned: 'tag-blue', mentioned: 'tag-pink', due: 'tag-yellow', npc: 'tag-accent' };
+const TYPE_TAG = { assigned: 'tag-blue', mentioned: 'tag-pink', due: 'tag-yellow', team: 'tag-accent' };
 
 export default function Notifications() {
   const dispatch = useDispatch();
@@ -27,7 +27,7 @@ export default function Notifications() {
 
   const togglePref = (key) => {
     dispatch(settingsPatched({ notifPrefs: { ...notifPrefs, [key]: !notifPrefs[key] } }));
-    dispatch(toastPushed({ text: `pings for "${key}" ${notifPrefs[key] ? 'off. silence.' : 'on. stay posted.'}` }));
+    dispatch(toastPushed({ text: `Notifications for "${key}" ${notifPrefs[key] ? 'off' : 'on'}` }));
   };
 
   return (
@@ -35,7 +35,7 @@ export default function Notifications() {
       <div className="page-head">
         <div>
           <h1>notifications</h1>
-          <p className="page-sub">{unread ? `${unread} unread. the pings demand attention.` : 'all caught up. unbothered. moisturized.'}</p>
+          <p className="page-sub">{unread ? `${unread} unread notification(s).` : 'You are all caught up.'}</p>
         </div>
         <div className="page-actions">
           {unread > 0 && (
@@ -53,7 +53,7 @@ export default function Notifications() {
               className="btn"
               onClick={async () => {
                 dispatch(notificationsCleared({ userId: actorId }));
-                dispatch(toastPushed({ text: 'notification tray decluttered' }));
+                dispatch(toastPushed({ text: 'Notifications cleared' }));
               }}
             >
               clear all
@@ -66,7 +66,7 @@ export default function Notifications() {
         <EmptyState
           emoji="🔕"
           title="zero notifications"
-          sub="nobody needs you right now. use this time wisely (nap)."
+          sub="No notifications yet."
         />
       ) : (
         <div className="notif-list">
@@ -90,14 +90,14 @@ export default function Notifications() {
 
       <section className="home-panel">
         <div className="home-panel-head">
-          <h3>🔔 ping preferences</h3>
+          <h3>Notification preferences</h3>
           <span className="mono-label"><Settings2 size={12} style={{ display: 'inline' }} /> stored with your settings</span>
         </div>
         {[
-          ['assigned', 'someone assigns you a task'],
-          ['mentioned', 'someone @s you in a comment'],
-          ['due', 'a task of yours is due soon (checked every few minutes)'],
-          ['npc', 'the npc coworkers ping you with their fake updates'],
+          ['assigned', 'Someone assigns you a task'],
+          ['mentioned', 'Someone @mentions you in a comment'],
+          ['due', 'One of your tasks is due soon (checked every few minutes)'],
+          ['team', 'A simulated teammate @mentions you'],
         ].map(([key, label]) => (
           <div className="settings-row" key={key}>
             <div className="settings-row-copy">
@@ -115,7 +115,7 @@ export default function Notifications() {
       </section>
 
       <span className="mono-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <Bell size={12} /> the bell in the topbar shows the same unread count. click a notification to jump to the task.
+        <Bell size={12} /> The bell in the topbar shows the same unread count. Click a notification to open its task.
       </span>
     </div>
   );

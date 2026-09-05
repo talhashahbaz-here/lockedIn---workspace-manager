@@ -68,7 +68,7 @@ export default function Onboarding({ user }) {
           columnId: 'col_icebox',
           title: t.title,
           description: `from the "${template.name}" template`,
-          priority: t.priority ?? 'mid',
+          priority: t.priority ?? 'medium',
           dueDate: null,
           assigneeId: user.id,
           labels: t.labels ?? [],
@@ -87,7 +87,7 @@ export default function Onboarding({ user }) {
       localStorage.setItem(`lockedin-onboarded-${user.id}`, 'true');
     } catch { /* fine */ }
 
-    dispatch(toastPushed({ text: 'workspace ready. welcome to the grind' }));
+    dispatch(toastPushed({ text: 'Workspace ready. Welcome aboard!' }));
     navigate('/app/home');
   };
 
@@ -115,21 +115,21 @@ export default function Onboarding({ user }) {
 
         {step === 1 ? (
           <form className="stack-16" onSubmit={(e) => { e.preventDefault(); setStep(2); }}>
-            <h2 className="display-md">first, name your space.</h2>
-            <p className="muted text-sm">a workspace holds your projects and your people. you are the owner — you can rename it whenever.</p>
+            <h2 className="display-md">Name your workspace.</h2>
+            <p className="muted text-sm">A workspace holds your projects and your team. You are the owner and can rename it anytime.</p>
             <label className="field">
               <span className="mono-label">workspace name</span>
               <input
                 className="input"
                 autoFocus
-                placeholder="the grind society"
+                placeholder="e.g. Acme Inc"
                 value={wsForm.name}
                 onChange={(e) => setWsForm({ ...wsForm, name: e.target.value })}
                 required
               />
             </label>
             <div className="field">
-              <span className="mono-label">vibe (emoji)</span>
+              <span className="mono-label">Emoji</span>
               <div className="avatar-picker">
                 {WS_EMOJIS.map((e) => (
                   <button key={e} type="button" className={`avatar-option ${wsForm.emoji === e ? 'selected' : ''}`} onClick={() => setWsForm({ ...wsForm, emoji: e })}>
@@ -154,14 +154,14 @@ export default function Onboarding({ user }) {
               </div>
             </div>
             <div className="row" style={{ justifyContent: 'space-between' }}>
-              <button type="button" className="btn btn-ghost" onClick={skip}>skip for now</button>
-              <button type="submit" className="btn btn-accent" disabled={!wsForm.name.trim()}>next: first project →</button>
+              <button type="button" className="btn btn-ghost" onClick={skip}>Skip for now</button>
+              <button type="submit" className="btn btn-accent" disabled={!wsForm.name.trim()}>Next: first project →</button>
             </div>
           </form>
         ) : (
           <form className="stack-16" onSubmit={finish}>
-            <h2 className="display-md">now, one project.</h2>
-            <p className="muted text-sm">pick a template and we pre-fill the tasks. you can skip the name and do this later.</p>
+            <h2 className="display-md">Now, one project.</h2>
+            <p className="muted text-sm">Pick a template and we will pre-fill starter tasks. The name is optional.</p>
             <div className="row-gap-6">
               <label className="field" style={{ width: 92 }}>
                 <span className="mono-label">emoji</span>
@@ -201,7 +201,7 @@ export default function Onboarding({ user }) {
             </div>
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <button type="button" className="btn" onClick={() => setStep(1)}>← back</button>
-              <button type="submit" className="btn btn-accent">take me in ✳</button>
+              <button type="submit" className="btn btn-accent">Finish</button>
             </div>
           </form>
         )}

@@ -44,14 +44,14 @@ export default function BulkBar({ project: projectProp = null }) {
   const bulkDelete = async () => {
     const ok = await confirm({
       title: `delete ${ids.length} task(s)?`,
-      body: 'gone. all of them. the undo button will be right there, but still.',
-      confirmText: 'delete them all',
+      body: 'All selected tasks will be deleted. You can undo from the toast.',
+      confirmText: 'Delete all',
     });
     if (!ok) return;
     ids.forEach((id) => dispatch(taskDeleted({ id })));
     dispatch(toastPushed({
       tone: 'undo',
-      text: `${ids.length} task(s) yeeted`,
+      text: `${ids.length} task(s) deleted`,
       action: { label: 'undo', type: UNDO },
     }));
     dispatch(bulkCleared());

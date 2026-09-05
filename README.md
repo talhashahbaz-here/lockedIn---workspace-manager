@@ -4,7 +4,7 @@
 
 LockedIn is a full **workspace manager** (Notion/Jira-style) built as a **frontend-only** app: auth, real-time updates and persistence are all simulated on the client with mock data, `localStorage` and IndexedDB. No backend. No cap.
 
-**design language:** minimal brutalism — hard 2px borders, offset shadows, zero border-radius, loud lime/pink accents, Space Grotesk + Archivo Black + Space Mono, and copy that actually talks like your group chat.
+**design language:** minimal brutalism — hard 2px borders, offset shadows, zero border-radius, loud lime/pink accents, Space Grotesk + Archivo Black + Space Mono. The marketing site carries the attitude; inside the app the copy stays plain and the screens stay calm.
 
 **stack:** Vite ⚡ React 18 ⚡ React Router 6 ⚡ Redux Toolkit ⚡ Sass
 
@@ -20,7 +20,7 @@ npm run dev      # http://localhost:5173
 **log in instantly:** the login screen has one-tap mock profile chips, or deep-link `http://localhost:5173/login?as=u_jules`.
 Password for every mock account: `frfr1234`.
 
-Try **trent smith** (viewer) to see permission-gated UI, or **zara iman** (owner of "side quests") to feel workspace switching.
+Try **trent smith** (viewer) to see permission-gated UI, or switch workspaces from the sidebar to feel multi-workspace mode. New registered accounts get a two-step setup wizard (name your workspace → first project from a template).
 
 | script | what it does |
 | --- | --- |
@@ -71,7 +71,7 @@ Try **trent smith** (viewer) to see permission-gated UI, or **zara iman** (owner
 ### ✅ tasks & subtasks
 - [x] create / edit / delete task (inline composer, full composer modal, detail modal)
 - [x] checklist-style subtasks
-- [x] task fields: title, description, status (column), priority (lowkey → drop everything), due date, assignee, labels
+- [x] task fields: title, description, status (column), priority (low → medium → high → urgent), due date, assignee, labels
 - [x] mark task / subtask complete
 - [x] task detail modal (expanded view, 5 tabs)
 - [x] attach files to a task — stored as base64 in state, nothing uploaded anywhere (700kb cap)

@@ -29,7 +29,7 @@ export default function Edit() {
   if (!task) {
     return (
       <div className="page">
-        <EmptyState emoji="👻" title="task not found" sub="wrong id, deleted task, or the url goblin struck again.">
+        <EmptyState emoji="👻" title="task not found" sub="The task may have been deleted, or the link is wrong.">
           <Link to="/app/tasks" className="btn btn-accent">back to tasks</Link>
         </EmptyState>
       </div>
@@ -41,7 +41,7 @@ export default function Edit() {
       <div className="empty-state">
         <div className="empty-emoji">🛠️</div>
         <h4 className="empty-title">{task.title}</h4>
-        <p className="empty-sub">the task editor is open in a modal. close it to head back to the project.</p>
+        <p className="empty-sub">The task editor is open in a modal. Close it to head back to the project.</p>
       </div>
       <TaskDetail />
     </div>

@@ -29,7 +29,7 @@ export default function TaskComposer() {
       description: '',
       projectId: firstProject?.id ?? '',
       columnId: composer.columnId ?? firstProject?.columns[0]?.id ?? '',
-      priority: 'mid',
+      priority: 'medium',
       dueDate: composer.dueDate ?? '',
       assigneeId: '',
       labels: [],
@@ -76,20 +76,20 @@ export default function TaskComposer() {
       order: Date.now(),
     };
     dispatch(taskAdded(task));
-    dispatch(toastPushed({ text: `"${task.title}" spawned. go touch it` }));
+    dispatch(toastPushed({ text: `"${task.title}" created` }));
     // purely theatrical save indicator
     await fakeRequest(200);
   };
 
   return (
-    <Modal open onClose={() => dispatch(composerClosed())} eyebrow="new task ✳ n" title="spawn a task" width={620}>
+    <Modal open onClose={() => dispatch(composerClosed())} eyebrow="new task ✳ n" title="New task" width={620}>
       <form className="stack-16" onSubmit={submit}>
         <label className="field">
           <span className="mono-label">title *</span>
           <input
             className="input"
             autoFocus
-            placeholder="fix the thing that breaks the other thing"
+            placeholder="What needs to be done?"
             value={form.title}
             onChange={(e) => set({ title: e.target.value })}
             required
@@ -100,7 +100,7 @@ export default function TaskComposer() {
           <span className="mono-label">description</span>
           <textarea
             className="input"
-            placeholder="details, links, lore…"
+            placeholder="Add more details…"
             value={form.description}
             onChange={(e) => set({ description: e.target.value })}
           />
@@ -200,10 +200,10 @@ export default function TaskComposer() {
 
         <div className="row" style={{ justifyContent: 'flex-end' }}>
           <button type="button" className="btn" onClick={() => dispatch(composerClosed())}>
-            nah
+            Cancel
           </button>
           <button type="submit" className="btn btn-accent">
-            <Plus size={15} strokeWidth={2.5} /> spawn it
+            <Plus size={15} strokeWidth={2.5} /> Create task
           </button>
         </div>
       </form>

@@ -156,7 +156,7 @@ export default function CalendarView({ tasks, users }) {
         })}
       </div>
       <span className="mono-label">
-        ✳ drag tasks between days to reschedule. click an empty day to spawn a task on it.
+        ✳ Drag tasks between days to reschedule. Click an empty day to add a task there.
       </span>
     </div>
   );

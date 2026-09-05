@@ -52,7 +52,7 @@ export default function TaskCard({
         )}
         {task.dueDate && (
           <span className={`due-chip ${overdue ? 'overdue' : ''} ${today ? 'today' : ''}`}>
-            {overdue ? 'cooked · ' : today ? 'today · ' : ''}
+            {overdue ? 'overdue · ' : today ? 'today · ' : ''}
             {friendlyDate(task.dueDate)}
           </span>
         )}

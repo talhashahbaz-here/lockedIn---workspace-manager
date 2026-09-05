@@ -67,7 +67,7 @@ export default function Settings() {
       emoji: profile.emoji,
       color: profile.color,
     });
-    dispatch(toastPushed({ text: 'profile updated. looking sharp' }));
+    dispatch(toastPushed({ text: 'Profile updated' }));
   };
 
   /* ------------------------------- export ---------------------------------- */
@@ -155,9 +155,9 @@ export default function Settings() {
   /* -------------------------------- reset ---------------------------------- */
   const resetAll = async () => {
     const ok = await confirm({
-      title: 'nuke ALL local data?',
-      body: 'everything you built gets wiped and the demo data re-seeds. there is no undo for this one. think.',
-      confirmText: 'nuke it all',
+      title: 'Reset all local data?',
+      body: 'All local data is wiped and the demo data is restored. This cannot be undone.',
+      confirmText: 'Reset everything',
     });
     if (!ok) return;
     await idbClear();
@@ -175,7 +175,7 @@ export default function Settings() {
       <div className="page-head">
         <div>
           <h1>settings</h1>
-          <p className="page-sub">tune the app to your exact level of unhinged.</p>
+          <p className="page-sub">Preferences for your account and workspace.</p>
         </div>
       </div>
 
@@ -227,7 +227,7 @@ export default function Settings() {
                 <input className="input" value={profile.name} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
               </label>
               <label className="field">
-                <span className="mono-label">email (locked — it is your login)</span>
+                <span className="mono-label">Email (used for login — read-only)</span>
                 <input className="input" value={profile.email} disabled style={{ opacity: 0.6 }} />
               </label>
               <label className="field">
@@ -241,8 +241,8 @@ export default function Settings() {
               <hr className="divider" />
               <div className="settings-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
                 <div className="settings-row-copy">
-                  <span className="settings-row-title">quick profile switch (multi-user sim)</span>
-                  <span className="settings-row-sub">hop into another mock user to demo roles & permissions instantly.</span>
+                  <span className="settings-row-title">Switch profile (multi-user demo)</span>
+                  <span className="settings-row-sub">Instantly demo roles and permissions as another mock user.</span>
                 </div>
                 <div className="filter-chips">
                   {users.map((u) => (
@@ -270,7 +270,7 @@ export default function Settings() {
               <div className="settings-row">
                 <div className="settings-row-copy">
                   <span className="settings-row-title">theme</span>
-                  <span className="settings-row-sub">light is brutal. dark is sneaky brutal.</span>
+                  <span className="settings-row-sub">Applies immediately and is remembered.</span>
                 </div>
                 <div className="row-gap-6">
                   <button
@@ -307,9 +307,9 @@ export default function Settings() {
               </div>
               <div className="settings-row">
                 <div className="settings-row-copy">
-                  <span className="settings-row-title">npc coworkers</span>
+                  <span className="settings-row-title">Simulated teammates</span>
                   <span className="settings-row-sub">
-                    simulated teammates comment, move cards and stay "online". turn them off for a quiet life. <Radio size={12} style={{ display: 'inline' }} />
+                    Demo teammates occasionally comment and move cards so the workspace feels live. <Radio size={12} style={{ display: 'inline' }} />
                   </span>
                 </div>
                 <input
@@ -321,8 +321,8 @@ export default function Settings() {
               </div>
               <div className="settings-row">
                 <div className="settings-row-copy">
-                  <span className="settings-row-title">simulated network flakiness</span>
-                  <span className="settings-row-sub">occasionally fakes a failed save so you can watch optimistic updates roll back. nerdy but fun.</span>
+                  <span className="settings-row-title">Simulated network failures</span>
+                  <span className="settings-row-sub">Occasionally fakes a failed save so optimistic updates visibly roll back.</span>
                 </div>
                 <input
                   type="checkbox"
@@ -424,8 +424,8 @@ export default function Settings() {
               <h3 style={{ fontSize: 19 }}>data & offline</h3>
               <div className="settings-row">
                 <div className="settings-row-copy">
-                  <span className="settings-row-title">export workspace as json</span>
-                  <span className="settings-row-sub">one file: workspace + projects + tasks + comments. keep it somewhere safe.</span>
+                  <span className="settings-row-title">Export workspace as JSON</span>
+                  <span className="settings-row-sub">Downloads a JSON file with this workspace's projects, tasks and comments.</span>
                 </div>
                 <button type="button" className="btn" onClick={exportWorkspace}>
                   <Download size={13} /> export
@@ -434,7 +434,7 @@ export default function Settings() {
               <div className="settings-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
                 <div className="settings-row-copy">
                   <span className="settings-row-title">import workspace json</span>
-                  <span className="settings-row-sub">validated before anything happens. invalid files get roasted, not loaded.</span>
+                  <span className="settings-row-sub">Files are validated before anything is imported.</span>
                 </div>
                 <div className="row-gap-6">
                   <input ref={fileRef} type="file" accept="application/json" hidden onChange={(e) => e.target.files?.[0] && importJSON(e.target.files[0])} />
@@ -452,8 +452,8 @@ export default function Settings() {
               </div>
               <div className="settings-row">
                 <div className="settings-row-copy">
-                  <span className="settings-row-title">manual sync (theatrical)</span>
-                  <span className="settings-row-sub">fakes a round trip to a server that does not exist. satisfying regardless.</span>
+                  <span className="settings-row-title">Sync (simulated)</span>
+                  <span className="settings-row-sub">Fakes a round trip to a server — useful for demoing the sync state.</span>
                 </div>
                 <button
                   type="button"
@@ -462,7 +462,7 @@ export default function Settings() {
                     dispatch(syncStatusSet('syncing'));
                     await new Promise((r) => setTimeout(r, 1200));
                     dispatch(syncStatusSet('idle'));
-                    dispatch(toastPushed({ text: 'synced. nothing changed. still satisfying.' }));
+                    dispatch(toastPushed({ text: 'Sync complete.' }));
                   }}
                 >
                   <RefreshCw size={13} /> sync now
@@ -471,13 +471,13 @@ export default function Settings() {
               <div className="settings-row">
                 <div className="settings-row-copy">
                   <span className="settings-row-title">offline indicator</span>
-                  <span className="settings-row-sub">the app watches navigator.onLine. go offline (devtools → network) to see the banner.</span>
+                  <span className="settings-row-sub">Watches navigator.onLine. Go offline (DevTools → Network) to see the banner.</span>
                 </div>
                 <span className="tag tag-accent">automatic</span>
               </div>
               <span className="task-view-note">
                 ✳ everything is persisted to IndexedDB automatically and rehydrates on reload. try refreshing right now —
-                the vibe remains intact.
+                Your data is restored exactly as you left it.
               </span>
             </>
           )}
@@ -501,7 +501,7 @@ export default function Settings() {
                   onClick={async () => {
                     const ok = await confirm({
                       title: `delete "${ws?.name}"?`,
-                      body: 'irreversible-ish. everything inside gets shredded.',
+                      body: 'Everything inside this workspace will be deleted.',
                       confirmText: 'delete workspace',
                     });
                     if (!ok) return;
@@ -520,8 +520,8 @@ export default function Settings() {
               </div>
               <div className="danger-zone">
                 <div className="settings-row-copy">
-                  <span className="settings-row-title">reset the whole app</span>
-                  <span className="settings-row-sub">wipes all local data (IndexedDB) and reseeds the demo universe. logins survive.</span>
+                  <span className="settings-row-title">Reset all app data</span>
+                  <span className="settings-row-sub">Wipes all local data (IndexedDB) and restores the original demo data. Your login survives.</span>
                 </div>
                 <button type="button" className="btn btn-danger" onClick={resetAll}>
                   <Trash2 size={13} /> reset everything

@@ -58,7 +58,7 @@ export default function TaskWorkspace({
         <span className="task-view-note">
           {!perms.can('editTasks') && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-              <Lock size={11} /> read-only mode ({perms.role}) — viewers can look, not touch
+              <Lock size={11} /> Read-only mode ({perms.role})
             </span>
           )}
         </span>

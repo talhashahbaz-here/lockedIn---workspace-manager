@@ -33,8 +33,8 @@ export default function Add() {
         <h4 className="empty-title">new task</h4>
         <p className="empty-sub">
           {projects.length
-            ? 'the composer should be open right now. if it is not, hit escape and use the button like everyone else.'
-            : 'you need at least one project before tasks can exist. facts.'}
+            ? 'The composer should be open right now.'
+            : 'Create a project first — tasks live inside projects.'}
         </p>
       </div>
       <TaskComposer />

@@ -1,4 +1,4 @@
-/* ForgotPassword — we pretend to send an email. theater, but honest theater. */
+/* ForgotPassword — simulated reset flow. no emails are actually sent. */
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -16,19 +16,18 @@ export default function ForgotPassword() {
   return (
     <div className="auth-card">
       <div>
-        <span className="mono-label">password amnesia</span>
-        <h2>forgot it? valid.</h2>
+        <span className="mono-label">password reset</span>
+        <h2>reset your password.</h2>
       </div>
       <p className="auth-sub">
-        happens to the best of us. drop your email and we will absolutely,
-        definitely, 100% send a reset link. (we will not. there is no server. but you feel seen, right?)
+        Enter your email and we will send a reset link. (This is a frontend-only
+        demo, so nothing is actually sent.)
       </p>
 
       {sent ? (
         <div className="auth-forgot-note">
           <MailCheck size={15} strokeWidth={2.5} style={{ display: 'inline', verticalAlign: -3 }} />{' '}
-          reset link “sent” to {email || 'your email'}. check your inbox in an alternate universe
-          where this app has a backend. psst: every mock account uses <b>frfr1234</b>.
+          Reset link “sent” to {email || 'your email'}. Every mock account uses the password <b>frfr1234</b>.
         </div>
       ) : (
         <form className="auth-form" onSubmit={submit}>
@@ -44,7 +43,7 @@ export default function ForgotPassword() {
             />
           </label>
           <button type="submit" className="btn btn-accent btn-block">
-            <Send size={14} strokeWidth={2.5} /> pretend to send it
+            <Send size={14} strokeWidth={2.5} /> send reset link
           </button>
         </form>
       )}

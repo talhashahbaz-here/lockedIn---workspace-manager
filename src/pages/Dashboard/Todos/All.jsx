@@ -39,7 +39,7 @@ export default function All({ global = false, calendar = false }) {
     if (!project) {
       return (
         <div className="page">
-          <EmptyState emoji="🫥" title="project not found" sub="it may have been deleted. projects have feelings too.">
+          <EmptyState emoji="🫥" title="project not found" sub="It may have been deleted.">
             <Link to="/app/projects" className="btn btn-accent"><ArrowLeft size={13} /> back to projects</Link>
           </EmptyState>
         </div>
@@ -55,7 +55,7 @@ export default function All({ global = false, calendar = false }) {
               <h1 style={{ fontSize: 'clamp(24px, 3vw, 34px)' }}>{project.emoji} {project.name}</h1>
               {project.archived && <span className="tag tag-red">archived — read only</span>}
             </div>
-            <p className="project-hero-desc">{project.description || 'no description. it prefers to remain an enigma.'}</p>
+            <p className="project-hero-desc">{project.description || 'No description.'}</p>
           </div>
           <Link to="/app/projects" className="btn btn-sm"><ArrowLeft size={12} /> all projects</Link>
         </div>
@@ -80,8 +80,8 @@ export default function All({ global = false, calendar = false }) {
           <h1>{calendar ? 'calendar' : 'all tasks'}</h1>
           <p className="page-sub">
             {calendar
-              ? 'every deadline in the workspace, on one grid.'
-              : `every task across ${projects.length} project(s) in ${ws?.name ?? 'the workspace'}.`}
+              ? 'All deadlines in this workspace, on one grid.'
+              : `all tasks across ${projects.length} project(s) in ${ws?.name ?? 'this workspace'}.`}
           </p>
         </div>
       </div>

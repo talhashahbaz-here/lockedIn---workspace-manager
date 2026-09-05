@@ -55,7 +55,7 @@ export default function Activity() {
       <div className="page-head">
         <div>
           <h1>activity</h1>
-          <p className="page-sub">the group chat, but it is a work log. filter it like a detective.</p>
+          <p className="page-sub">Everything that happened in this workspace, filterable by person and type.</p>
         </div>
       </div>
 
@@ -91,7 +91,7 @@ export default function Activity() {
       </div>
 
       {groups.length === 0 ? (
-        <EmptyState emoji="📭" title="no activity" sub="suspiciously quiet. go move a task around and come back." />
+        <EmptyState emoji="📭" title="no activity" sub="No activity matches these filters." />
       ) : (
         <div className="stack-8">
           {groups.map(([day, items]) => (

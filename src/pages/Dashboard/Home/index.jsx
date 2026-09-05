@@ -26,9 +26,9 @@ function GettingStarted({ projects, tasks, activeTasks }) {
 
   const steps = useMemo(
     () => [
-      { id: 'project', label: 'spawn your first project', done: projects.length > 0, to: '/app/projects' },
+      { id: 'project', label: 'Create your first project', done: projects.length > 0, to: '/app/projects' },
       { id: 'task', label: 'add a task to it', done: tasks.length > 0, to: '/app/tasks' },
-      { id: 'ship', label: 'ship one thing', done: tasks.length > tasks.filter((t) => !t.completedAt).length, to: '/app/tasks' },
+      { id: 'ship', label: 'Complete a task', done: tasks.length > tasks.filter((t) => !t.completedAt).length, to: '/app/tasks' },
     ],
     [projects.length, tasks]
   );
@@ -48,7 +48,7 @@ function GettingStarted({ projects, tasks, activeTasks }) {
           onClick={() => {
             setDismissed(true);
             lsSet(DISMISS_KEY, true);
-            dispatch(toastPushed({ text: 'checklist hidden. you clearly got this' }));
+            dispatch(toastPushed({ text: 'Checklist hidden' }));
           }}
         >
           <X size={12} strokeWidth={2.5} />
@@ -66,7 +66,7 @@ function GettingStarted({ projects, tasks, activeTasks }) {
           </li>
         ))}
       </ol>
-      <span className="mono-label">{remaining} step(s) left. then you are officially locked in.</span>
+      <span className="mono-label">{remaining} step(s) left. You are all set.</span>
     </section>
   );
 }
@@ -101,7 +101,7 @@ export default function Home() {
       <div className="stat-grid stats-3">
         <div className="stat-card stat-accent">
           <span className="stat-num">{stats.activeTasks}</span>
-          <span className="mono-label">tasks in the fire</span>
+          <span className="mono-label">Active tasks</span>
         </div>
         <div className="stat-card">
           <span className="stat-num">{stats.doneTasks}</span>
@@ -109,19 +109,19 @@ export default function Home() {
         </div>
         <div className="stat-card stat-red">
           <span className="stat-num">{stats.overdue}</span>
-          <span className="mono-label">overdue (cooked)</span>
+          <span className="mono-label">Overdue</span>
         </div>
       </div>
 
       <div className="home-grid">
-        {/* on your plate */}
+        {/* my tasks */}
         <section className="home-panel">
           <div className="home-panel-head">
-            <h3>📋 on your plate</h3>
+            <h3>My tasks</h3>
             <Link to="/app/tasks" className="btn btn-sm">all tasks</Link>
           </div>
           {myTasks.length === 0 ? (
-            <EmptyState compact emoji="🧘" title="nothing assigned to you" sub="either you are very efficient or very avoidant.">
+            <EmptyState compact emoji="🧘" title="nothing assigned to you" sub="Nothing is assigned to you right now.">
               <button type="button" className="btn btn-sm btn-accent" onClick={() => navigate('/app/tasks')}>browse tasks</button>
             </EmptyState>
           ) : (

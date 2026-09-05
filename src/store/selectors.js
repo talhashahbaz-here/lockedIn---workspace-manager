@@ -87,7 +87,7 @@ const matchesFilters = (t, f) => {
   return true;
 };
 
-const PRIORITY_RANK = { drop: 0, highkey: 1, mid: 2, lowkey: 3 };
+const PRIORITY_RANK = { urgent: 0, high: 1, medium: 2, low: 3 };
 
 export const applySort = (tasks, sort) => {
   const dir = sort.dir === 'desc' ? -1 : 1;

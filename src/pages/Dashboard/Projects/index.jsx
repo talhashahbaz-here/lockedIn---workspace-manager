@@ -60,7 +60,7 @@ function ProjectForm({ initial, onClose }) {
       form.memberIds.forEach((id) => {
         if (!initial.memberIds.includes(id)) dispatch(projectMembersToggled({ id: initial.id, userId: id }));
       });
-      dispatch(toastPushed({ text: 'project updated. very professional' }));
+      dispatch(toastPushed({ text: 'Project updated' }));
       onClose();
       return;
     }
@@ -87,7 +87,7 @@ function ProjectForm({ initial, onClose }) {
           columnId: 'col_icebox',
           title: t.title,
           description: `from the "${template.name}" template`,
-          priority: t.priority ?? 'mid',
+          priority: t.priority ?? 'medium',
           dueDate: null,
           assigneeId: null,
           labels: t.labels ?? [],
@@ -106,7 +106,7 @@ function ProjectForm({ initial, onClose }) {
   };
 
   return (
-    <Modal open onClose={onClose} width={620} eyebrow={isEdit ? 'edit project' : 'new project'} title={isEdit ? 'tune the project' : 'cook up a project'}>
+    <Modal open onClose={onClose} width={620} eyebrow={isEdit ? 'edit project' : 'new project'} title={isEdit ? 'Edit project' : 'New project'}>
       <form className="stack-16" onSubmit={submit}>
         <div className="row-gap-6">
           <label className="field" style={{ width: 92 }}>
@@ -213,12 +213,12 @@ export default function Projects() {
   const toggleArchive = async (p) => {
     if (p.archived) {
       dispatch(projectArchived({ id: p.id, archived: false }));
-      dispatch(toastPushed({ text: `"${p.name}" revived. welcome back king` }));
+      dispatch(toastPushed({ text: `"${p.name}" restored` }));
       return;
     }
     const ok = await confirm({
       title: `archive "${p.name}"?`,
-      body: 'it goes read-only and hides from the main grid. nothing is deleted. very reversible.',
+      body: 'Archived projects become read-only and are hidden from the main list. You can restore them anytime.',
       confirmText: 'archive it', danger: false,
     });
     if (ok) {
@@ -231,7 +231,7 @@ export default function Projects() {
     const taskCount = counts.get(p.id) ?? 0;
     const ok = await confirm({
       title: `delete "${p.name}"?`,
-      body: `${taskCount} task(s) and all comments go with it. this cannot be undone without regrets.`,
+      body: `${taskCount} task(s) and all comments will be deleted. This cannot be undone.`,
       confirmText: 'delete forever',
     });
     if (ok) {
@@ -245,7 +245,7 @@ export default function Projects() {
       <div className="page-head">
         <div>
           <h1>projects</h1>
-          <p className="page-sub">the containers of ambition. keep them small enough to finish.</p>
+          <p className="page-sub">Group your work into projects.</p>
         </div>
         <div className="page-actions">
           <button type="button" className={`btn ${showArchived ? 'btn-ink' : ''}`} onClick={() => setShowArchived((v) => !v)}>
@@ -263,7 +263,7 @@ export default function Projects() {
         <EmptyState
           emoji={showArchived ? '🗃️' : '📭'}
           title={showArchived ? 'the archive is empty' : 'no projects yet'}
-          sub={showArchived ? 'nothing retired. everything is still in the game.' : 'spawn your first project, pick a template, assign the squad.'}
+          sub={showArchived ? 'No archived projects.' : 'Create your first project, pick a template, and assign members.'}
         >
           {!showArchived && perms.can('createProjects') && (
             <button type="button" className="btn btn-accent" onClick={() => setFormFor('new')}>
@@ -325,7 +325,7 @@ export default function Projects() {
 
       {!perms.can('manageProjects') && (
         <div className="access-denied">
-          🔒 heads up: as <b>{perms.role}</b> you can work tasks but not create/archive/delete projects. the borders are real.
+          🔒 heads up: as <b>{perms.role}</b> you can work on tasks, but only admins and owners can create, archive or delete projects.
         </div>
       )}
 

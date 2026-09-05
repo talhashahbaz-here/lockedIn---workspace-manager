@@ -72,7 +72,7 @@ function WorkspaceSwitcher({ collapsed }) {
     setCreating(false);
     setForm({ name: '', emoji: '🧢', color: 'lime' });
     navigate('/app/projects');
-    dispatch(toastPushed({ text: 'workspace founded. a new era fr' }));
+    dispatch(toastPushed({ text: 'Workspace created' }));
   };
 
   const renameWorkspace = async (e) => {
@@ -85,13 +85,13 @@ function WorkspaceSwitcher({ collapsed }) {
   const leaveWorkspace = async () => {
     setOpen(false);
     if (workspaces.length <= 1) {
-      dispatch(toastPushed({ tone: 'warn', text: 'cannot delete the last workspace. chaos needs a home.' }));
+      dispatch(toastPushed({ tone: 'warn', text: 'You need at least one workspace.' }));
       return;
     }
     const ok = await confirm({
-      title: `delete "${ws.name}"?`,
-      body: `the workspace, its ${projects.filter((p) => p.workspaceId === ws.id).length} project(s) and all their tasks will be gone forever. for real.`,
-      confirmText: 'delete workspace',
+      title: `Delete "${ws.name}"?`,
+      body: `the workspace, its ${projects.filter((p) => p.workspaceId === ws.id).length} project(s) and all their tasks will be deleted.`,
+      confirmText: 'Delete workspace',
     });
     if (!ok) return;
     dispatch({ type: 'data/workspaceDeleted', payload: { id: ws.id } });
@@ -144,18 +144,18 @@ function WorkspaceSwitcher({ collapsed }) {
           )}
           {ws && (
             <span className="mono-label" style={{ padding: '4px 10px 8px', display: 'block' }}>
-              you are: {role} — {ROLE_VIBES[role] ?? 'off the grid'}
+              you are: {role} — {ROLE_VIBES[role] ?? 'unknown'}
             </span>
           )}
         </div>
       )}
 
       {creating && (
-        <Modal open onClose={() => setCreating(false)} eyebrow="new workspace" title="found a new era" width={440}>
+        <Modal open onClose={() => setCreating(false)} eyebrow="new workspace" title="New workspace" width={440}>
           <form className="stack-16" onSubmit={createWorkspace}>
             <label className="field">
               <span className="mono-label">name</span>
-              <input className="input" autoFocus placeholder="the grind society" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <input className="input" autoFocus placeholder="e.g. Acme Inc" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </label>
             <div className="row-gap-6">
               <label className="field" style={{ width: 100 }}>
@@ -169,7 +169,7 @@ function WorkspaceSwitcher({ collapsed }) {
       )}
 
       {editing && ws && (
-        <Modal open onClose={() => setEditing(false)} eyebrow="workspace settings" title="rebrand the workspace" width={440}>
+        <Modal open onClose={() => setEditing(false)} eyebrow="workspace settings" title="Workspace settings" width={440}>
           <form className="stack-16" onSubmit={renameWorkspace}>
             <label className="field">
               <span className="mono-label">name</span>
@@ -292,7 +292,7 @@ function Sidebar() {
 
   const NavSections = [
     { label: 'workspace', items: MENU_MAIN },
-    { label: 'the squad', items: MENU_TEAM },
+    { label: 'Team', items: MENU_TEAM },
   ];
 
   return (
@@ -326,8 +326,8 @@ function Sidebar() {
       </nav>
 
       <div className="sidebar-foot">
-        <span className="npc-pill" title={npcMode ? 'npc coworkers are vibing' : 'npc coworkers muted'}>
-          <span className={`npc-dot ${npcMode ? '' : 'off'}`} /> {npcMode ? 'coworkers online' : 'muted'}
+        <span className="npc-pill" title={npcMode ? 'Simulated teammates active' : 'Simulated teammates muted'}>
+          <span className={`npc-dot ${npcMode ? '' : 'off'}`} /> {npcMode ? 'teammates online' : 'muted'}
         </span>
         <button type="button" className="icon-btn icon-btn-sm mobile-top-row" onClick={() => dispatch(mobileNavToggled(false))} aria-label="close nav">
           ✕

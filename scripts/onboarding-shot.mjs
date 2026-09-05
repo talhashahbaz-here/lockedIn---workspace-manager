@@ -16,9 +16,9 @@ const page = await browser.newPage();
 
 // register a fresh account
 await page.goto('http://localhost:5173/register', { waitUntil: 'networkidle0' });
-await page.type('input[placeholder="alex from it"]', 'nova test');
-await page.type('input[placeholder="alex@lockedin.fun"]', `nova${Date.now()}@test.fun`);
-await page.type('input[placeholder="something unhackable"]', 'frfr1234');
+await page.type('input[placeholder="jane doe"]', 'nova test');
+await page.type('input[placeholder="jane@example.com"]', `nova${Date.now()}@test.fun`);
+await page.type('input[placeholder="••••••••"]', 'frfr1234');
 await page.click('button[type="submit"]');
 await page.waitForSelector('.onboarding-card', { timeout: 15000 });
 await page.screenshot({ path: `${SHOTS}/40-onboarding-step1.png` });

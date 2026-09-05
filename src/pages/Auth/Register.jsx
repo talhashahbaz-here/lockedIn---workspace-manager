@@ -29,11 +29,11 @@ export default function Register() {
   return (
     <div className="auth-card">
       <div>
-        <span className="mono-label">new era loading…</span>
-        <h2>make it official.</h2>
+        <span className="mono-label">create account</span>
+        <h2>Create your account.</h2>
       </div>
       <p className="auth-sub">
-        an account, stored entirely on your machine. the cloud cannot hurt you here.
+        Your account is stored locally on this device.
       </p>
       {error && <div className="auth-error">⚠ {error}</div>}
       <form className="auth-form" onSubmit={submit}>
@@ -41,7 +41,7 @@ export default function Register() {
           <span className="mono-label">name</span>
           <input
             className="input"
-            placeholder="alex from it"
+            placeholder="jane doe"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
@@ -52,7 +52,7 @@ export default function Register() {
           <input
             className="input"
             type="email"
-            placeholder="alex@lockedin.fun"
+            placeholder="jane@example.com"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
             required
@@ -63,7 +63,7 @@ export default function Register() {
           <input
             className="input"
             type="password"
-            placeholder="something unhackable"
+            placeholder="••••••••"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
             required
@@ -75,7 +75,7 @@ export default function Register() {
         </button>
       </form>
       <div className="auth-alt">
-        already locked in? <Link to="/login">log in</Link>
+        already have an account? <Link to="/login">log in</Link>
       </div>
     </div>
   );

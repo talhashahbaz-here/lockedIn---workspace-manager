@@ -1,6 +1,7 @@
 /* ==========================================================================
-   global config — the rules of the game. statuses, priorities, roles,
-   permissions, colors, project templates. all the vibes live here.
+   global config — statuses, priorities, roles, permissions, colors, and
+   project templates. the marketing site keeps the slang; this file talks
+   normally.
    ========================================================================== */
 
 export const APP_NAME = 'LockedIn';
@@ -23,40 +24,39 @@ export const uid = (prefix = 'id') =>
 
 // default columns a project starts with. fully customizable per project.
 export const DEFAULT_COLUMNS = [
-  { id: 'col_icebox', title: 'icebox' },
-  { id: 'col_upnext', title: 'up next' },
-  { id: 'col_cookin', title: "cookin'" },
-  { id: 'col_shipped', title: 'shipped' },
+  { id: 'col_backlog', title: 'backlog' },
+  { id: 'col_next', title: 'up next' },
+  { id: 'col_doing', title: 'in progress' },
+  { id: 'col_done', title: 'done' },
 ];
 
 /* -------------------------------- priority ------------------------------- */
 
 export const PRIORITIES = [
-  { id: 'lowkey', label: 'lowkey', color: '#b9b5ab' },
-  { id: 'mid', label: 'mid', color: '#ffd23f' },
-  { id: 'highkey', label: 'highkey', color: '#ff9a62' },
-  { id: 'drop', label: 'drop everything', color: '#ff6b6b' },
+  { id: 'low', label: 'low', color: '#b9b5ab' },
+  { id: 'medium', label: 'medium', color: '#ffd23f' },
+  { id: 'high', label: 'high', color: '#ff9a62' },
+  { id: 'urgent', label: 'urgent', color: '#ff6b6b' },
 ];
 export const priorityOf = (id) => PRIORITIES.find((p) => p.id === id) ?? PRIORITIES[1];
 
 /* --------------------------------- labels -------------------------------- */
 
 export const LABEL_POOL = [
-  'design', 'frontend', 'backend', 'copy', 'research', 'chore',
-  'bug', 'feature', 'vibe-check', 'asap', 'meetings', 'content',
+  'design', 'frontend', 'backend', 'research', 'bug', 'content', 'asap', 'meetings', 'planning',
 ];
 
 /* --------------------------------- colors -------------------------------- */
 
 export const COLOR_POOL = [
-  { id: 'lime', hex: '#c6f32e', name: 'goated' },
-  { id: 'pink', hex: '#ff90e8', name: 'slay' },
-  { id: 'blue', hex: '#7eb6ff', name: 'chill' },
-  { id: 'yellow', hex: '#ffd23f', name: 'main character' },
-  { id: 'lilac', hex: '#c5a3ff', name: 'dreamy' },
-  { id: 'orange', hex: '#ff9a62', name: 'spicy' },
-  { id: 'teal', hex: '#63e6be', name: 'clean' },
-  { id: 'red', hex: '#ff6b6b', name: 'cooked' },
+  { id: 'lime', hex: '#c6f32e', name: 'lime' },
+  { id: 'pink', hex: '#ff90e8', name: 'pink' },
+  { id: 'blue', hex: '#7eb6ff', name: 'blue' },
+  { id: 'yellow', hex: '#ffd23f', name: 'yellow' },
+  { id: 'lilac', hex: '#c5a3ff', name: 'lilac' },
+  { id: 'orange', hex: '#ff9a62', name: 'orange' },
+  { id: 'teal', hex: '#63e6be', name: 'teal' },
+  { id: 'red', hex: '#ff6b6b', name: 'red' },
 ];
 export const colorOf = (id) => COLOR_POOL.find((c) => c.id === id) ?? COLOR_POOL[0];
 
@@ -65,10 +65,10 @@ export const colorOf = (id) => COLOR_POOL.find((c) => c.id === id) ?? COLOR_POOL
 export const ROLES = ['owner', 'admin', 'member', 'viewer'];
 
 export const ROLE_VIBES = {
-  owner: 'runs the show',
-  admin: 'has the range',
-  member: 'gets it done',
-  viewer: 'lurks (respectfully)',
+  owner: 'full control',
+  admin: 'can manage everything',
+  member: 'can work on tasks',
+  viewer: 'read-only access',
 };
 
 const PERMISSION_MATRIX = {
@@ -95,59 +95,59 @@ export const can = (role, action) =>
 export const PROJECT_TEMPLATES = [
   {
     id: 'blank',
-    name: 'from scratch (brave)',
-    emoji: '🫡',
-    description: 'nothing but vibes. build it your way.',
+    name: 'blank project',
+    emoji: '📄',
+    description: 'no starter tasks. build it your way.',
     tasks: [],
   },
   {
     id: 'bughunt',
-    name: 'bug hunt',
+    name: 'bug fix',
     emoji: '🐛',
-    description: 'smash the bugs before they smash you.',
+    description: 'track, fix and verify bugs.',
     tasks: [
-      { title: 'triage the bug backlog', priority: 'highkey', labels: ['bug'] },
-      { title: 'repro the top 3 crashes', priority: 'mid', labels: ['bug', 'research'] },
-      { title: 'ship the fixes', priority: 'drop', labels: ['bug', 'asap'] },
-      { title: 'write regression tests so it never happens again', priority: 'lowkey', labels: ['chore'] },
+      { title: 'Triage the bug backlog', priority: 'high', labels: ['bug'] },
+      { title: 'Reproduce the top 3 issues', priority: 'medium', labels: ['bug', 'research'] },
+      { title: 'Ship the fixes', priority: 'urgent', labels: ['bug', 'asap'] },
+      { title: 'Add regression tests', priority: 'low', labels: ['planning'] },
     ],
   },
   {
     id: 'launch',
     name: 'launch week',
     emoji: '🚀',
-    description: 'seven days. one launch. zero chill.',
+    description: 'everything a release needs, in order.',
     tasks: [
-      { title: 'freeze the feature list fr', priority: 'drop', labels: ['asap'] },
-      { title: 'write the launch copy', priority: 'highkey', labels: ['copy', 'content'] },
-      { title: 'prep socials (tease it)', priority: 'mid', labels: ['content'] },
-      { title: 'QA pass like your life depends on it', priority: 'highkey', labels: ['bug'] },
-      { title: 'ship it + watch the metrics', priority: 'drop', labels: ['asap'] },
-      { title: 'post-mortem + snacks', priority: 'lowkey', labels: ['meetings'] },
+      { title: 'Freeze the feature list', priority: 'urgent', labels: ['asap'] },
+      { title: 'Write launch copy', priority: 'high', labels: ['content'] },
+      { title: 'Prepare social posts', priority: 'medium', labels: ['content'] },
+      { title: 'Full QA pass', priority: 'high', labels: ['bug'] },
+      { title: 'Ship and monitor metrics', priority: 'urgent', labels: ['asap'] },
+      { title: 'Post-mortem meeting', priority: 'low', labels: ['meetings'] },
     ],
   },
   {
     id: 'content',
-    name: 'content drop',
+    name: 'content calendar',
     emoji: '🎬',
-    description: 'feed the algorithm before it eats you.',
+    description: 'plan and produce content on a schedule.',
     tasks: [
-      { title: 'brainstorm 20 ideas, keep 5', priority: 'mid', labels: ['research'] },
-      { title: 'script the bangers', priority: 'highkey', labels: ['copy'] },
-      { title: 'film / design the assets', priority: 'highkey', labels: ['design', 'content'] },
-      { title: 'schedule + caption check', priority: 'mid', labels: ['content'] },
-      { title: 'engage the comments bestie', priority: 'lowkey', labels: ['chore'] },
+      { title: 'Brainstorm 20 ideas, pick 5', priority: 'medium', labels: ['research'] },
+      { title: 'Write the scripts', priority: 'high', labels: ['content'] },
+      { title: 'Design the assets', priority: 'high', labels: ['design', 'content'] },
+      { title: 'Schedule posts and write captions', priority: 'medium', labels: ['content'] },
+      { title: 'Reply to comments', priority: 'low', labels: ['meetings'] },
     ],
   },
   {
     id: 'personal',
-    name: 'personal chaos',
-    emoji: '🌀',
-    description: 'life admin but make it manageable.',
+    name: 'personal list',
+    emoji: '📌',
+    description: 'life admin, but organized.',
     tasks: [
-      { title: 'brain dump everything here', priority: 'mid', labels: ['chore'] },
-      { title: 'book that appointment you keep avoiding', priority: 'highkey', labels: ['asap'] },
-      { title: 'touch grass (recurring)', priority: 'lowkey', labels: ['vibe-check'] },
+      { title: 'Brain dump everything here', priority: 'medium', labels: ['planning'] },
+      { title: 'Book that appointment you keep avoiding', priority: 'high', labels: ['asap'] },
+      { title: 'Take an actual break', priority: 'low', labels: ['meetings'] },
     ],
   },
 ];
@@ -174,12 +174,11 @@ export const isDueSoon = (dueDate) => {
 export const friendlyDate = (d) => {
   if (!d) return '';
   const dt = new Date(d);
-  const today = new Date();
   const diffDays = Math.round(
     (new Date(d).setHours(0, 0, 0, 0) - new Date().setHours(0, 0, 0, 0)) / 86400000
   );
   if (diffDays === 0) return 'today';
-  if (diffDays === 1) return 'tmrw';
+  if (diffDays === 1) return 'tomorrow';
   if (diffDays === -1) return 'yesterday';
   if (Math.abs(diffDays) < 7)
     return diffDays > 0 ? `in ${diffDays}d` : `${-diffDays}d ago`;

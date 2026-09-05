@@ -100,14 +100,14 @@ export const fakeRequest = (ms, failRate = 0) =>
 export async function hydrateState() {
   try {
     const saved = await idbGet(STORAGE_KEYS.state);
-    if (saved && saved.version === 1 && Array.isArray(saved.data?.tasks)) {
+    if (saved && saved.version === 2 && Array.isArray(saved.data?.tasks)) {
       return saved;
     }
   } catch {
     /* corrupted or unavailable — reseed below */
   }
   return {
-    version: 1,
+    version: 2,
     savedAt: Date.now(),
     data: buildSeedState(),
     logs: buildSeedLogs(),
@@ -130,7 +130,7 @@ export async function hydrateState() {
 
 export async function persistState(payload) {
   try {
-    await idbSet(STORAGE_KEYS.state, { ...payload, version: 1, savedAt: Date.now() });
+    await idbSet(STORAGE_KEYS.state, { ...payload, version: 2, savedAt: Date.now() });
   } catch {
     /* offline / quota — the app keeps running on state alone */
   }
@@ -161,11 +161,11 @@ export function validateImport(parsed) {
   const summary = { workspaces: 0, projects: 0, tasks: 0, comments: 0 };
 
   if (!parsed || typeof parsed !== 'object') {
-    return { ok: false, errors: ['file is not even json object fr'], summary };
+    return { ok: false, errors: ['File is not valid JSON.'], summary };
   }
-  if (parsed.app !== 'lockedin') errors.push('this file is not from lockedin. imposter.');
+  if (parsed.app !== 'lockedin') errors.push('This file was not exported from LockedIn.');
   if (parsed.kind !== 'workspace' && parsed.kind !== 'full') errors.push('unknown export kind');
-  if (parsed.version !== 1) errors.push('unknown version. time traveler detected.');
+  if (parsed.version !== 1) errors.push('Unknown export version.');
 
   const ws = parsed.workspace;
   if (!ws || typeof ws !== 'object' || typeof ws.id !== 'string' || typeof ws.name !== 'string' || !Array.isArray(ws.members)) {

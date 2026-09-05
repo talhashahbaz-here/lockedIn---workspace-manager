@@ -70,7 +70,7 @@ export default function FrontendHome() {
           <div className="panel hero-card-2">
             <div className="mono-label">cookin'</div>
             <p className="text-sm" style={{ fontWeight: 700 }}>ship the thing. any thing.</p>
-            <span className="tag tag-accent">highkey</span>
+            <span className="tag tag-accent">urgent</span>
           </div>
           <div className="panel hero-card-3">
             <div className="mono-label">shipped</div>

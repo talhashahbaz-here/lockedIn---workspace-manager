@@ -119,7 +119,7 @@ function Comments({ task }) {
   return (
     <div className="stack-12">
       <div className="comment-list">
-        {comments.length === 0 && <span className="mono-label">no comments. the silence is deafening.</span>}
+        {comments.length === 0 && <span className="mono-label">No comments yet.</span>}
         {comments.map((c) => {
           const author = users.find((u) => u.id === c.authorId);
           const own = c.authorId === actor?.id;
@@ -207,7 +207,7 @@ function Comments({ task }) {
             ref={boxRef}
             className="input"
             rows={2}
-            placeholder="drop a comment… @ to mention someone"
+            placeholder="Write a comment… @ to mention someone"
             value={draft}
             onChange={onChange}
             onKeyDown={onKey}
@@ -267,9 +267,9 @@ export default function TaskDetail() {
 
   const remove = async () => {
     const ok = await confirm({
-      title: `yeet "${task.title}"?`,
-      body: 'the task and its comments will be deleted. undo exists, but let us not test it.',
-      confirmText: 'yeet it',
+      title: `Delete "${task.title}"?`,
+      body: 'The task and its comments will be deleted. You can undo from the toast.',
+      confirmText: 'Delete',
     });
     if (!ok) return;
     dispatch(deleteTaskOptimistic({ id: task.id }));
@@ -284,7 +284,7 @@ export default function TaskDetail() {
   const duplicate = () => {
     const newId = uid('t');
     dispatch(taskDuplicated({ id: task.id, newId }));
-    dispatch(toastPushed({ text: 'task duplicated. twice the glory' }));
+    dispatch(toastPushed({ text: 'Task duplicated' }));
     dispatch(detailTaskClosed());
     setTimeout(() => dispatch({ type: 'ui/detailTaskOpened', payload: newId }), 30);
   };
@@ -312,7 +312,7 @@ export default function TaskDetail() {
       order: (task.order ?? 0) - 0.5,
     };
     dispatch(subtaskPromoted({ taskId: task.id, subtaskId: st.id, newTask }));
-    dispatch(toastPushed({ text: `"${st.title}" is a real task now. proud of it` }));
+    dispatch(toastPushed({ text: 'Subtask promoted to a task' }));
   };
 
   const demoteToSubtask = async (targetTaskId) => {
@@ -320,7 +320,7 @@ export default function TaskDetail() {
     const target = siblingTasks.find((t) => t.id === targetTaskId);
     const ok = await confirm({
       title: 'demote this task?',
-      body: `"${task.title}" will become a subtask of "${target?.title}". its comments stay behind (with the ship).`,
+      body: `"${task.title}" will become a subtask of "${target?.title}". Its comments will be removed.`,
       confirmText: 'demote it',
       danger: false,
     });
@@ -445,7 +445,7 @@ export default function TaskDetail() {
               className="input detail-desc-input"
               defaultValue={task.description ?? ''}
               disabled={!canEdit}
-              placeholder="context, links, lore…"
+              placeholder="Add details…"
               onBlur={(e) => {
                 if (e.target.value !== (task.description ?? '')) patch({ description: e.target.value });
               }}
@@ -455,7 +455,7 @@ export default function TaskDetail() {
           <div className="field">
             <span className="mono-label">labels</span>
             <div className="filter-chips">
-              {['design', 'frontend', 'backend', 'copy', 'research', 'chore', 'bug', 'feature', 'vibe-check', 'asap', 'meetings', 'content'].map((l) => (
+              {['design', 'frontend', 'backend', 'research', 'bug', 'content', 'asap', 'meetings', 'planning'].map((l) => (
                 <button
                   key={l}
                   type="button"
@@ -577,7 +577,7 @@ export default function TaskDetail() {
       {/* -------------------------------- files ------------------------------- */}
       {tab === 'files' && (
         <div className="stack-12">
-          {task.attachments.length === 0 && <span className="mono-label">no files. suspiciously minimal.</span>}
+          {task.attachments.length === 0 && <span className="mono-label">No files attached yet.</span>}
           {task.attachments.map((a) => (
             <div key={a.id} className="attachment-row">
               <Paperclip size={14} strokeWidth={2.5} />
@@ -624,7 +624,7 @@ export default function TaskDetail() {
       {/* ------------------------------ activity ------------------------------ */}
       {tab === 'activity' && (
         <div className="activity-list">
-          {activity.length === 0 && <span className="mono-label">no activity yet. be the change.</span>}
+          {activity.length === 0 && <span className="mono-label">No activity yet.</span>}
           {activity.map((a) => {
             const actorUser = users.find((u) => u.id === a.actorId);
             return (

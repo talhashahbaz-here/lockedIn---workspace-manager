@@ -47,16 +47,14 @@ const pushNotification = (dispatch, state, userId, type, text, taskId = null) =>
 /* ---------------------------- npc coworker brain --------------------------- */
 
 const NPC_COMMENTS = [
-  'shipping this rn, do not perceive me',
-  'ok this actually slaps',
-  'can someone review before eod? begging',
-  'blocked. sending vibes to the sprint',
-  'not this bug again 💀',
-  'locked in fr, do not disturb',
-  'moving on unless someone objects. silence = consent',
-  'found the issue. it was me. it is always me',
-  'adding this to the docs so future us does not suffer',
-  'who wrote this. I wrote this. classic',
+  'Moving this to in progress.',
+  'Can someone review this before end of day?',
+  'Found the issue — fix is on the way.',
+  'Blocked on the API changes, see the thread.',
+  'This looks done to me, moving it over.',
+  'Added notes to the doc, take a look when you can.',
+  'Picking this up after standup.',
+  'Tests are green, ready for review.',
 ];
 
 function runNpcEvent(dispatch, state) {
@@ -95,7 +93,7 @@ function runNpcEvent(dispatch, state) {
       // toast only when YOU are mentioned — everything else lives in the feed
       if (mentions.includes(actorId)) {
         pushNotification(dispatch, state, actorId, 'mentioned', `${npcName} mentioned you on "${task.title}"`, task.id);
-        dispatch(toastPushed({ tone: 'live', text: `live: ${npcName} @'d you on "${task.title}"` }));
+        dispatch(toastPushed({ tone: 'live', text: `${npcName} mentioned you on "${task.title}"` }));
       }
     } else if (roll < 0.75) {
       // npc moves a task to a different column
@@ -122,7 +120,7 @@ function runNpcEvent(dispatch, state) {
     pushActivity(dispatch, state, { ...base, actorId: npcId, type: 'subtask', text: `checked off "${st.title}" in "${task.title}"` });
   } else {
     // npc vibes: reacts to a task
-    pushActivity(dispatch, state, { ...base, actorId: npcId, type: 'task', text: `eyed "${task.title}" suspiciously 👀` });
+    pushActivity(dispatch, state, { ...base, actorId: npcId, type: 'task', text: `reviewed "${task.title}"` });
   }
 }
 
@@ -148,9 +146,9 @@ const effectsMiddleware = (store) => (next) => (action) => {
       const t = taskOf(state, action.payload.id);
       if (t) {
         const base = { workspaceId: t.workspaceId ?? state.ui.currentWorkspaceId, projectId: t.projectId, taskId: t.id };
-        pushActivity(dispatch, state, { ...base, actorId, type: 'task', text: `spawned "${t.title}"` });
+        pushActivity(dispatch, state, { ...base, actorId, type: 'task', text: `created "${t.title}"` });
         if (t.assigneeId && t.assigneeId !== actorId) {
-          pushNotification(dispatch, state, t.assigneeId, 'assigned', `${userName(state, actorId)} assigned you "${t.title}". you got this fr`, t.id);
+          pushNotification(dispatch, state, t.assigneeId, 'assigned', `${userName(state, actorId)} assigned you "${t.title}"`, t.id);
         }
       }
       break;
@@ -164,7 +162,7 @@ const effectsMiddleware = (store) => (next) => (action) => {
         pushActivity(dispatch, state, { ...base, actorId, type: 'task', text: `moved "${t.title}" → ${colTitle(state, t.projectId, t.columnId)}` });
       }
       if ('completedAt' in patch) {
-        pushActivity(dispatch, state, { ...base, actorId, type: 'task', text: patch.completedAt ? `shipped "${t.title}" 🚀` : `reopened "${t.title}"` });
+        pushActivity(dispatch, state, { ...base, actorId, type: 'task', text: patch.completedAt ? `completed "${t.title}"` : `reopened "${t.title}"` });
       }
       if ('title' in patch && patch.title) {
         pushActivity(dispatch, state, { ...base, actorId, type: 'task', text: `renamed a task to "${t.title}"` });
@@ -174,12 +172,12 @@ const effectsMiddleware = (store) => (next) => (action) => {
         if (patch.assigneeId !== from) {
           pushActivity(dispatch, state, { ...base, actorId, type: 'task', text: patch.assigneeId ? `put ${userName(state, patch.assigneeId)} on "${t.title}"` : `unassigned "${t.title}"` });
           if (patch.assigneeId && patch.assigneeId !== actorId) {
-            pushNotification(dispatch, state, patch.assigneeId, 'assigned', `${userName(state, actorId)} assigned you "${t.title}". you got this fr`, t.id);
+            pushNotification(dispatch, state, patch.assigneeId, 'assigned', `${userName(state, actorId)} assigned you "${t.title}"`, t.id);
           }
         }
       }
       if ('priority' in patch) {
-        pushActivity(dispatch, state, { ...base, actorId, type: 'task', text: `bumped "${t.title}" to ${patch.priority}` });
+        pushActivity(dispatch, state, { ...base, actorId, type: 'task', text: `set "${t.title}" priority to ${patch.priority}` });
       }
       if ('dueDate' in patch) {
         pushActivity(dispatch, state, { ...base, actorId, type: 'task', text: patch.dueDate ? `rescheduled "${t.title}"` : `cleared the due date on "${t.title}"` });
@@ -189,7 +187,7 @@ const effectsMiddleware = (store) => (next) => (action) => {
     case 'data/taskDeleted': {
       const t = before.data.present.tasks.find((x) => x.id === action.payload.id);
       if (t) {
-        pushActivity(dispatch, state, { workspaceId: state.ui.currentWorkspaceId, projectId: t.projectId, taskId: t.id, actorId, type: 'task', text: `yeeted "${t.title}"` });
+        pushActivity(dispatch, state, { workspaceId: state.ui.currentWorkspaceId, projectId: t.projectId, taskId: t.id, actorId, type: 'task', text: `deleted "${t.title}"` });
       }
       break;
     }
@@ -234,7 +232,7 @@ const effectsMiddleware = (store) => (next) => (action) => {
     }
     case 'data/projectAdded': {
       const p = state.data.present.projects.find((x) => x.id === action.payload.id ?? action.payload.project?.id);
-      if (p) pushActivity(dispatch, state, { workspaceId: p.workspaceId, projectId: p.id, actorId, type: 'project', text: `cooked up project "${p.name}"` });
+      if (p) pushActivity(dispatch, state, { workspaceId: p.workspaceId, projectId: p.id, actorId, type: 'project', text: `created project "${p.name}"` });
       break;
     }
     case 'data/projectUpdated': {
@@ -246,7 +244,7 @@ const effectsMiddleware = (store) => (next) => (action) => {
     }
     case 'data/projectArchived': {
       const p = state.data.present.projects.find((x) => x.id === action.payload.id);
-      if (p) pushActivity(dispatch, state, { workspaceId: p.workspaceId, projectId: p.id, actorId, type: 'project', text: action.payload.archived ? `archived "${p.name}" (rest in peace)` : `revived "${p.name}" from the archive` });
+      if (p) pushActivity(dispatch, state, { workspaceId: p.workspaceId, projectId: p.id, actorId, type: 'project', text: action.payload.archived ? `archived "${p.name}"` : `restored "${p.name}" from the archive` });
       break;
     }
     case 'data/projectDeleted': {
@@ -256,8 +254,8 @@ const effectsMiddleware = (store) => (next) => (action) => {
     }
     case 'data/memberInvited': {
       const { workspaceId, userId, role } = action.payload;
-      pushActivity(dispatch, state, { workspaceId, actorId, type: 'member', text: `added ${userName(state, userId)} to the group chat as ${role}` });
-      if (userId !== actorId) pushNotification(dispatch, state, userId, 'assigned', `${userName(state, actorId)} pulled you into a workspace as ${role}. congrats or condolences`, null);
+      pushActivity(dispatch, state, { workspaceId, actorId, type: 'member', text: `added ${userName(state, userId)} as ${role}` });
+      if (userId !== actorId) pushNotification(dispatch, state, userId, 'assigned', `${userName(state, actorId)} added you to a workspace as ${role}`, null);
       break;
     }
     case 'data/memberRoleChanged': {
@@ -267,11 +265,11 @@ const effectsMiddleware = (store) => (next) => (action) => {
     }
     case 'data/memberRemoved': {
       const { workspaceId, userId } = action.payload;
-      pushActivity(dispatch, state, { workspaceId, actorId, type: 'member', text: `removed ${userName(before, userId)} from the workspace. it is giving radio silence` });
+      pushActivity(dispatch, state, { workspaceId, actorId, type: 'member', text: `removed ${userName(before, userId)} from the workspace` });
       break;
     }
     case 'data/workspaceAdded': {
-      pushActivity(dispatch, state, { workspaceId: action.payload.id, actorId, type: 'workspace', text: `founded "${action.payload.name}". a new era` });
+      pushActivity(dispatch, state, { workspaceId: action.payload.id, actorId, type: 'workspace', text: `created workspace "${action.payload.name}"` });
       break;
     }
     case 'data/workspaceUpdated': {

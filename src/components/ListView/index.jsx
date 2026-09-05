@@ -101,7 +101,7 @@ export default function ListView({ tasks, users, project, columns: columnsProp =
           {groups.length === 0 && (
             <tr>
               <td colSpan={8} className="muted" style={{ textAlign: 'center', padding: 28 }}>
-                nothing here. it is giving… zero tasks.
+                No tasks match the current filters.
               </td>
             </tr>
           )}

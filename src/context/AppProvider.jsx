@@ -63,11 +63,11 @@ export function AppProvider({ children }) {
   useEffect(() => {
     const goOnline = () => {
       dispatch(onlineSet(true));
-      dispatch(toastPushed({ text: 'you are back online. we been knew you would return' }));
+      dispatch(toastPushed({ text: 'Back online.' }));
     };
     const goOffline = () => {
       dispatch(onlineSet(false));
-      dispatch(toastPushed({ tone: 'warn', text: 'offline mode. changes are chillin locally, will sync later' }));
+      dispatch(toastPushed({ tone: 'warn', text: 'You are offline — changes are saved locally and will sync later.' }));
     };
     window.addEventListener('online', goOnline);
     window.addEventListener('offline', goOffline);
@@ -110,10 +110,10 @@ export function AppProvider({ children }) {
         dispatch(
           notificationPushed({
             id: `n_${key}`, userId: actorId, ts: Date.now(), type: 'due',
-            text: `"${t.title}" is due soon. lock in.`, read: false, taskId: t.id,
+            text: `"${t.title}" is due soon.`, read: false, taskId: t.id,
           })
         );
-        dispatch(toastPushed({ tone: 'warn', text: `"${t.title}" is due soon. lock in.` }));
+        dispatch(toastPushed({ tone: 'warn', text: `"${t.title}" is due soon.` }));
       });
       if (changed) lsSet('lockedin-due-seen', seen);
     };

@@ -44,8 +44,8 @@ export function AuthProvider({ children }) {
   const login = useCallback(
     async (email, password) => {
       const u = users.find((x) => x.email.toLowerCase() === email.trim().toLowerCase());
-      if (!u) throw new Error('no account with that email. is it giving impostor?');
-      if (u.password !== password) throw new Error('wrong password. the password is cooked.');
+      if (!u) throw new Error('No account found with that email.');
+      if (u.password !== password) throw new Error('Incorrect password.');
       startSession(u.id);
       return u;
     },
@@ -55,11 +55,11 @@ export function AuthProvider({ children }) {
   const register = useCallback(
     async (name, email, password) => {
       const clean = email.trim().toLowerCase();
-      if (!name.trim() || name.trim().length < 2) throw new Error('that name is too short fr');
-      if (!isValidEmail(clean)) throw new Error('that email is not an email bestie');
-      if (password.length < 6) throw new Error('password needs 6+ characters. this is not a game');
+      if (!name.trim() || name.trim().length < 2) throw new Error('Name must be at least 2 characters.');
+      if (!isValidEmail(clean)) throw new Error('Enter a valid email address.');
+      if (password.length < 6) throw new Error('Password must be at least 6 characters.');
       if (users.some((u) => u.email.toLowerCase() === clean)) {
-        throw new Error('email already in the group chat. log in instead');
+        throw new Error('Email already registered. Try logging in instead.');
       }
       const nu = {
         id: uid('u'),
@@ -68,7 +68,7 @@ export function AuthProvider({ children }) {
         password,
         emoji: '🌱',
         color: 'teal',
-        bio: 'new here. locked in from day one',
+        bio: 'New to LockedIn',
       };
       dispatch(userAdded(nu));
       startSession(nu.id);

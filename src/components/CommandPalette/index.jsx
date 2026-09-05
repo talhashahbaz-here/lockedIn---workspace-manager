@@ -55,10 +55,10 @@ export default function CommandPalette() {
       { id: 'act-members', icon: Users, label: 'members & roles', run: () => navigate('/app/members') },
       { id: 'act-notifs', icon: Bell, label: `notifications${unread ? ` (${unread} unread)` : ''}`, run: () => navigate('/app/notifications') },
       { id: 'act-settings', icon: Settings, label: 'settings', run: () => navigate('/app/settings') },
-      { id: 'act-theme', icon: theme === 'light' ? Moon : Sun, label: `go ${theme === 'light' ? 'dark' : 'light'} mode`, run: () => dispatch(settingsPatched({ theme: theme === 'light' ? 'dark' : 'light' })) },
-      { id: 'act-npc', icon: Radio, label: `${npcMode ? 'mute' : 'unmute'} the npc coworkers`, run: () => dispatch(settingsPatched({ npcMode: !npcMode })) },
+      { id: 'act-theme', icon: theme === 'light' ? Moon : Sun, label: `Switch to ${theme === 'light' ? 'dark' : 'light'} mode`, run: () => dispatch(settingsPatched({ theme: theme === 'light' ? 'dark' : 'light' })) },
+      { id: 'act-npc', icon: Radio, label: `${npcMode ? 'Mute' : 'Unmute'} simulated teammates`, run: () => dispatch(settingsPatched({ npcMode: !npcMode })) },
       {
-        id: 'act-sync', icon: RefreshCw, label: 'fake a sync', run: async () => {
+        id: 'act-sync', icon: RefreshCw, label: 'Sync now (simulated)', run: async () => {
           dispatch(syncStatusSet('syncing'));
           await fakeRequest(1400);
           dispatch(syncStatusSet('idle'));
@@ -142,7 +142,7 @@ export default function CommandPalette() {
         </div>
         <div className="palette-list" ref={listRef}>
           {results.length === 0 && (
-            <div className="palette-empty mono-label">nothing found. it is giving void.</div>
+            <div className="palette-empty mono-label">No results found.</div>
           )}
           {results.map((item, i) => {
             const header = item.section !== lastSection ? item.section : null;
