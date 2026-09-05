@@ -9,7 +9,7 @@ import { selectMyPermissions, selectUsers } from '@/store/selectors';
 import { useApp } from '@/context/AppProvider';
 import { UNDO } from '@/store/undo';
 
-export default function BulkBar({ project }) {
+export default function BulkBar({ project: projectProp = null }) {
   const dispatch = useDispatch();
   const { confirm } = useApp();
   const perms = useSelector(selectMyPermissions);
@@ -17,6 +17,13 @@ export default function BulkBar({ project }) {
   const ids = useSelector((s) => s.ui.bulk.ids);
   const [status, setStatus] = useState('');
   const [assignee, setAssignee] = useState('');
+
+  // resolve the project from the selected tasks when not given explicitly
+  const project = useSelector((s) => {
+    if (projectProp) return projectProp;
+    const firstTask = s.data.present.tasks.find((t) => ids.includes(t.id));
+    return firstTask ? s.data.present.projects.find((p) => p.id === firstTask.projectId) : null;
+  });
 
   if (!ids.length) return null;
 

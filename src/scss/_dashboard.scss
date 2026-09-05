@@ -537,6 +537,41 @@
   letter-spacing: 0.05em;
 }
 
+/* misc runtime classes */
+.spin { animation: spin-once 0.9s linear infinite; }
+@keyframes spin-once { to { transform: rotate(360deg); } }
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  background: rgba(20, 20, 20, 0.45);
+}
+
+.ws-menu .danger-item { color: var(--red); }
+
+.view-toggle-note { margin-top: 14px; }
+
+/* project hero strip on project page */
+.project-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  border: var(--bd);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
+  .project-hero-strip { width: 8px; align-self: stretch; min-height: 54px; border: var(--bd); }
+  .project-hero-desc { color: var(--muted); font-size: 13.5px; max-width: 560px; }
+}
+
+.task-view-note {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
 /* responsive */
 @media (max-width: 1080px) {
   .home-grid { grid-template-columns: 1fr; }
