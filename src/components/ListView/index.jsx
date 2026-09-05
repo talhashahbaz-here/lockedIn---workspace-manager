@@ -4,8 +4,9 @@ import { useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { ArrowUpDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { priorityOf, friendlyDate, isOverdue } from '@/config/global';
-import { sortSet, detailTaskOpened, taskCheckToggled } from '@/store/state-helpers';
-import { applySort, groupTasks } from '@/store/selectors';
+import { sortSet, detailTaskOpened } from '@/store/slices/uiSlice';
+import { taskCheckToggled } from '@/store/state-helpers';
+import { groupTasks } from '@/store/selectors';
 import Avatar from '../Avatar';
 
 export default function ListView({ tasks, users, project, groupBy }) {

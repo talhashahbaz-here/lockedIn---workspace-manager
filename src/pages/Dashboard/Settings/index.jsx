@@ -11,9 +11,9 @@ import { useApp } from '@/context/AppProvider';
 import { COLOR_POOL, uid } from '@/config/global';
 import { downloadJSON, validateImport, idbClear } from '@/config/persistence';
 import {
-  settingsPatched, toastPushed, uiReset, workspaceSwitched, syncStatusSet, workspaceUpdated,
+  settingsPatched, toastPushed, uiReset, workspaceSwitched, syncStatusSet,
 } from '@/store/slices/uiSlice';
-import { stateImported, workspaceDeleted } from '@/store/slices/dataSlice';
+import { stateImported, workspaceDeleted, workspaceUpdated } from '@/store/slices/dataSlice';
 import {
   selectCurrentWorkspace, selectMyPermissions, selectWorkspaceTasks, selectUsers,
   selectCurrentWorkspaceId,
