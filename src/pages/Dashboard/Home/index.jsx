@@ -12,7 +12,7 @@ import { isOverdue, friendlyDate } from '@/config/global';
 import { lsGet, lsSet } from '@/config/persistence';
 import {
   selectWorkspaceStats, selectMyTasks, selectActivity, selectUsers,
-  selectActiveWorkspaceProjects,
+  selectActiveWorkspaceProjects, selectMyPermissions, selectWorkspaceTasks,
 } from '@/store/selectors';
 import { detailTaskOpened, toastPushed } from '@/store/slices/uiSlice';
 
@@ -81,22 +81,23 @@ export default function Home() {
   const users = useSelector(selectUsers);
   const activity = useSelector(selectActivity);
   const projects = useSelector(selectActiveWorkspaceProjects);
-  const wsTasks = useSelector((s) => {
-    const ids = new Set(s.data.present.projects.filter((p) => p.workspaceId === s.ui.currentWorkspaceId).map((p) => p.id));
-    return s.data.present.tasks.filter((t) => ids.has(t.projectId));
-  });
+  const perms = useSelector(selectMyPermissions);
+  // already scoped by the visibility rules (own tasks for members, all for admins)
+  const wsTasks = useSelector(selectWorkspaceTasks);
 
   const feed = useMemo(() => {
-    // activity entries are tagged with workspaceId at write time; the store
-    // already scopes reads, so a light slice is enough
-    return activity.slice(0, 8);
-  }, [activity]);
+    // only show activity for projects this user can see (visibility rules)
+    const visible = new Set(projects.map((p) => p.id));
+    return activity.filter((a) => !a.projectId || visible.has(a.projectId)).slice(0, 8);
+  }, [activity, projects]);
 
   return (
     <div className="page">
       <Hero />
 
-      <GettingStarted projects={projects} tasks={wsTasks} activeTasks={stats.activeTasks} />
+      {perms.can('createProjects') && (
+        <GettingStarted projects={projects} tasks={wsTasks} activeTasks={stats.activeTasks} />
+      )}
 
       <div className="stat-grid stats-3">
         <div className="stat-card stat-accent">

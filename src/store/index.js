@@ -60,9 +60,16 @@ const NPC_COMMENTS = [
 function runNpcEvent(dispatch, state) {
   const { actorId, currentWorkspaceId } = state.ui;
   if (!state.ui.settings.npcMode) return;
+  // the npc only touches work the current user is allowed to see
+  const role = state.data.present.workspaces
+    .find((w) => w.id === currentWorkspaceId)
+    ?.members.find((m) => m.userId === actorId)?.role;
+  const isAdmin = role === 'owner' || role === 'admin';
   const wsTasks = state.data.present.tasks.filter((t) => {
     const p = state.data.present.projects.find((x) => x.id === t.projectId);
-    return p && p.workspaceId === currentWorkspaceId && !p.archived;
+    if (!p || p.workspaceId !== currentWorkspaceId || p.archived) return false;
+    if (!isAdmin && !p.memberIds.includes(actorId)) return false;
+    return true;
   });
   const ws = state.data.present.workspaces.find((w) => w.id === currentWorkspaceId);
   if (!ws) return;

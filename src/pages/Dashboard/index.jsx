@@ -27,7 +27,7 @@ import {
   workspaceSwitched, mobileNavToggled, sidebarToggled, paletteToggled,
   settingsPatched, toastPushed, workspaceAdded, workspaceUpdated,
 } from '@/store/slices';
-import { selectUnreadCount, selectMyRole, selectProjects, selectUI, selectCurrentWorkspace, selectActor } from '@/store/selectors';
+import { selectUnreadCount, selectMyRole, selectProjects, selectUI, selectCurrentWorkspace, selectActor, selectVisibleWorkspaces } from '@/store/selectors';
 import Modal from '@/components/Modal';
 
 /* --------------------------- workspace switcher ---------------------------- */
@@ -38,7 +38,7 @@ function WorkspaceSwitcher({ collapsed }) {
   const { confirm } = useApp();
   const ws = useSelector(selectCurrentWorkspace);
   const projects = useSelector(selectProjects);
-  const workspaces = useSelector((s) => s.data.present.workspaces);
+  const workspaces = useSelector(selectVisibleWorkspaces);
   const role = useSelector(selectMyRole);
   const actor = useSelector(selectActor);
   const [open, setOpen] = useState(false);
@@ -344,19 +344,17 @@ export default function Dashboard() {
   const ws = useSelector(selectCurrentWorkspace);
   const actor = useSelector(selectActor);
   const mobileOpen = useSelector(selectUI).mobileNavOpen;
-  const projects = useSelector(selectProjects);
-  const workspaces = useSelector((s) => s.data.present.workspaces);
+  const workspaces = useSelector(selectVisibleWorkspaces);
   // if the user skipped onboarding but still has no workspace, offer a way back in
   const [restartOnboarding, setRestartOnboarding] = useState(false);
-  const memberAnywhere = workspaces.some((w) => w.members.some((m) => m.userId === actor?.id));
+  const memberAnywhere = workspaces.length > 0;
 
-  // make sure a workspace is always selected
+  // make sure a (visible) workspace is always selected
   useEffect(() => {
-    if (!ws) {
-      const first = projects.length ? projects[0].workspaceId : null;
-      if (first) dispatch(workspaceSwitched(first));
+    if (!ws && workspaces.length) {
+      dispatch(workspaceSwitched(workspaces[0].id));
     }
-  }, [ws, projects, dispatch]);
+  }, [ws, workspaces, dispatch]);
 
   if (actor && !memberAnywhere) {
     return (

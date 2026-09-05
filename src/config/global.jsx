@@ -83,7 +83,7 @@ const PERMISSION_MATRIX = {
   manageWorkspace: ['owner', 'admin'], // workspace settings
   deleteWorkspace: ['owner'],
   importData: ['owner', 'admin'],
-  exportData: ['owner', 'admin', 'member', 'viewer'],
+  exportData: ['owner', 'admin'], // full-workspace export is an admin power
   syncData: ['owner', 'admin', 'member', 'viewer'],
 };
 

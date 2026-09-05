@@ -1,12 +1,15 @@
 /* Activity — the workspace timeline. filterable by actor and action type,
-   grouped by day. everything everyone did, receipts attached. */
+   grouped by day. entries are scoped to projects the current user can see. */
 
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import Avatar from '@/components/Avatar';
 import EmptyState from '@/components/EmptyState';
 import { timeAgo } from '@/config/global';
-import { selectActivity, selectUsers, selectCurrentWorkspaceId } from '@/store/selectors';
+import {
+  selectActivity, selectUsers, selectCurrentWorkspaceId,
+  selectProjects, selectIsWorkspaceAdmin, selectActorId,
+} from '@/store/selectors';
 
 const TYPES = ['all', 'task', 'subtask', 'comment', 'project', 'member', 'workspace'];
 
@@ -23,10 +26,22 @@ export default function Activity() {
   const users = useSelector(selectUsers);
   const all = useSelector(selectActivity);
   const wsId = useSelector(selectCurrentWorkspaceId);
+  const projects = useSelector(selectProjects);
+  const isAdmin = useSelector(selectIsWorkspaceAdmin);
+  const actorId = useSelector(selectActorId);
 
   const [actor, setActor] = useState('all');
   const [type, setType] = useState('all');
   const [scope, setScope] = useState('workspace'); // workspace | everything
+
+  // only show entries for projects this user can see (visibility rules)
+  const visibleProjectIds = useMemo(
+    () =>
+      new Set(
+        (isAdmin ? projects : projects.filter((p) => p.memberIds.includes(actorId))).map((p) => p.id)
+      ),
+    [projects, isAdmin, actorId]
+  );
 
   const wsMembers = useMemo(() => {
     return new Set(
@@ -36,6 +51,7 @@ export default function Activity() {
 
   const filtered = all
     .filter((a) => (scope === 'workspace' ? a.workspaceId === wsId : true))
+    .filter((a) => !a.projectId || visibleProjectIds.has(a.projectId))
     .filter((a) => (actor === 'all' ? true : a.actorId === actor))
     .filter((a) => (type === 'all' ? true : a.type === type));
 

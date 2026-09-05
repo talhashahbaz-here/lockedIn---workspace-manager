@@ -422,12 +422,17 @@ export default function Settings() {
           {tab === 'data' && (
             <>
               <h3 style={{ fontSize: 19 }}>data & offline</h3>
+              {!perms.can('exportData') && (
+                <div className="access-denied">
+                  🔒 Export and import are limited to owners and admins because they cover the whole workspace.
+                </div>
+              )}
               <div className="settings-row">
                 <div className="settings-row-copy">
                   <span className="settings-row-title">Export workspace as JSON</span>
                   <span className="settings-row-sub">Downloads a JSON file with this workspace's projects, tasks and comments.</span>
                 </div>
-                <button type="button" className="btn" onClick={exportWorkspace}>
+                <button type="button" className="btn" onClick={exportWorkspace} disabled={!perms.can('exportData')} title={perms.can('exportData') ? '' : 'owners and admins only'}>
                   <Download size={13} /> export
                 </button>
               </div>
@@ -438,7 +443,7 @@ export default function Settings() {
                 </div>
                 <div className="row-gap-6">
                   <input ref={fileRef} type="file" accept="application/json" hidden onChange={(e) => e.target.files?.[0] && importJSON(e.target.files[0])} />
-                  <button type="button" className="btn" onClick={() => fileRef.current?.click()}>
+                  <button type="button" className="btn" onClick={() => fileRef.current?.click()} disabled={!perms.can('importData')} title={perms.can('importData') ? '' : 'owners and admins only'}>
                     <Upload size={13} /> pick a file
                   </button>
                   {importReport && (

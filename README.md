@@ -98,6 +98,7 @@ Try **trent smith** (viewer) to see permission-gated UI, or switch workspaces fr
 - [x] permission-gated UI (viewers can't edit/delete; members can't manage projects; etc.)
 - [x] role assignment per workspace member (owner-only, guarded)
 - [x] "access denied" states — inline banners + disabled controls, never silent
+- [x] **visibility scoping**: users only see workspaces they are a member of and projects they were added to; in aggregated views (all tasks, calendar, search, stats, activity) members and viewers see only their own assigned tasks — owners and admins see everything. project boards show the full task list to the project team. export/import are owner/admin only.
 
 ### 📜 activity log
 - [x] per-task activity feed (detail modal → activity tab)

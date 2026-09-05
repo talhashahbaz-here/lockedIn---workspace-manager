@@ -1,15 +1,17 @@
 /* Todos/All — the project task page. also handles the global "all tasks"
-   and workspace calendar modes via props from the router. */
+   and workspace calendar modes via props from the router. visibility:
+   owners/admins see everything; members/viewers get only projects they
+   are added to and, in the aggregated views, only their own tasks. */
 
 import { useParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Lock } from 'lucide-react';
 import TaskWorkspace from './index';
 import EmptyState from '@/components/EmptyState';
 import { colorOf } from '@/config/global';
 import {
   selectVisibleProjectTasks, selectVisibleWorkspaceTasks, selectUsers,
-  selectWorkspaceProjects, selectCurrentWorkspace, selectMyPermissions,
+  selectWorkspaceProjects, selectCurrentWorkspace, selectMyPermissions, selectProjectIsVisible,
 } from '@/store/selectors';
 
 export default function All({ global = false, calendar = false }) {
@@ -20,6 +22,9 @@ export default function All({ global = false, calendar = false }) {
   const perms = useSelector(selectMyPermissions);
   const project = useSelector((s) =>
     projectId ? s.data.present.projects.find((p) => p.id === projectId) : null
+  );
+  const projectVisible = useSelector((s) =>
+    projectId ? selectProjectIsVisible(s, projectId) : false
   );
   const projectTasks = useSelector((s) =>
     projectId ? selectVisibleProjectTasks(s, projectId) : []
@@ -36,10 +41,10 @@ export default function All({ global = false, calendar = false }) {
 
   /* ------------------------------- project mode ------------------------------ */
   if (projectId) {
-    if (!project) {
+    if (!project || !projectVisible) {
       return (
         <div className="page">
-          <EmptyState emoji="🫥" title="project not found" sub="It may have been deleted.">
+          <EmptyState emoji="🔒" title="No access to this project" sub="You can only open projects you have been added to. Ask an owner or admin to add you if you need access.">
             <Link to="/app/projects" className="btn btn-accent"><ArrowLeft size={13} /> back to projects</Link>
           </EmptyState>
         </div>
@@ -72,6 +77,7 @@ export default function All({ global = false, calendar = false }) {
 
   /* ------------------------- global tasks / calendar mode -------------------- */
   const tasks = calendar ? globalTasks.filter((t) => t.dueDate) : globalTasks;
+  const isAdmin = perms.role === 'owner' || perms.role === 'admin';
 
   return (
     <div className="page">
@@ -79,11 +85,16 @@ export default function All({ global = false, calendar = false }) {
         <div>
           <h1>{calendar ? 'calendar' : 'all tasks'}</h1>
           <p className="page-sub">
-            {calendar
-              ? 'All deadlines in this workspace, on one grid.'
-              : `all tasks across ${projects.length} project(s) in ${ws?.name ?? 'this workspace'}.`}
+            {isAdmin
+              ? `All tasks across ${projects.length} project(s) in ${ws?.name ?? 'this workspace'}.`
+              : `Your assigned tasks across ${projects.length} project(s) you are part of.`}
           </p>
         </div>
+        {!isAdmin && (
+          <span className="tag tag-yellow" style={{ display: 'inline-flex', gap: 6 }}>
+            <Lock size={11} /> showing your tasks only — owners and admins see all
+          </span>
+        )}
       </div>
       <TaskWorkspace
         project={null}
