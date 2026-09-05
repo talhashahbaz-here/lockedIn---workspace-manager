@@ -1,0 +1,30 @@
+{
+  "name": "lockedin",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "lockedin — the workspace that keeps gen-z employees locked in. minimal brutalism. no backend, no cap.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.2.7",
+    "lucide-react": "^0.451.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-redux": "^9.1.2",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.2",
+    "eslint": "^9.12.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "eslint-plugin-react-refresh": "^0.4.12",
+    "globals": "^15.9.0",
+    "sass": "^1.79.4",
+    "vite": "^5.4.8"
+  }
+}
