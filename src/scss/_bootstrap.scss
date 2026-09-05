@@ -153,8 +153,34 @@ h1, h2, h3, h4 {
 }
 
 .muted { color: var(--muted); }
-.accent-marker { background: var(--accent); color: #141414; padding: 0 0.18em; }
-.pink-marker { background: var(--pink); color: #141414; padding: 0 0.18em; }
+/* highlighted words — the color block lives on a ::before with z-index: -1,
+   so it paints UNDER the marked word (which stays crisp on top). the marker
+   is its own stacking context (isolation) so the block stays visible above
+   page backgrounds but still slides under any text it approaches. it extends
+   a little past the baseline and carries small margins for breathing room. */
+.accent-marker,
+.pink-marker {
+  position: relative;
+  display: inline-block;
+  isolation: isolate;
+  padding: 0 0.16em;
+  margin: 0.08em 0.04em 0.12em 0;
+  color: #141414;
+}
+.accent-marker::before,
+.pink-marker::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: -0.02em;
+  left: 0;
+  right: 0;
+  bottom: -0.12em; /* bleeds downward over whatever is below — under the text */
+  background: var(--accent);
+}
+.pink-marker::before {
+  background: var(--pink);
+}
 
 /* --------------------------------- buttons -------------------------------- */
 
