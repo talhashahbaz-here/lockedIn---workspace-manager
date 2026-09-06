@@ -8,6 +8,7 @@ export const APP_NAME = 'LockedIn';
 export const APP_TAGLINE = 'lock in. ship. repeat.';
 export const STORAGE_KEYS = {
   session: 'lockedin-session',
+  sessions: 'lockedin-sessions',
   theme: 'lockedin-theme',
   state: 'lockedin-state',
 };
@@ -74,14 +75,17 @@ export const ROLE_VIBES = {
 const PERMISSION_MATRIX = {
   editTasks: ['owner', 'admin', 'member'],
   deleteTasks: ['owner', 'admin', 'member'],
+  createTasks: ['owner', 'admin', 'member'],
   comment: ['owner', 'admin', 'member'],
-  createProjects: ['owner', 'admin', 'member'],
+  createProjects: ['owner', 'admin'],
   manageProjects: ['owner', 'admin'], // rename/archive/delete project + columns
   inviteMembers: ['owner', 'admin'],
   assignRoles: ['owner'],
-  removeMembers: ['owner'],
+  removeMembers: ['owner', 'admin'],
+  createWorkspace: ['owner', 'admin'],
   manageWorkspace: ['owner', 'admin'], // workspace settings
   deleteWorkspace: ['owner'],
+  acceptJoinRequests: ['owner', 'admin'],
   importData: ['owner', 'admin'],
   exportData: ['owner', 'admin'], // full-workspace export is an admin power
   syncData: ['owner', 'admin', 'member', 'viewer'],

@@ -20,6 +20,7 @@ export const UNDOABLE_TYPES = new Set([
   'data/workspaceAdded', 'data/workspaceUpdated', 'data/workspaceDeleted',
   'data/memberInvited', 'data/memberRoleChanged', 'data/memberRemoved',
   'data/userUpdated', 'data/projectMembersToggled',
+  'data/projectMessageSent', 'data/joinRequestCreated', 'data/joinRequestApproved',
 ]);
 
 const dataSlice = createSlice({
@@ -29,15 +30,61 @@ const dataSlice = createSlice({
     /* ------------------------------ users ------------------------------- */
     userAdded(state, { payload }) {
       state.users.push(payload);
+      state.workspaces.forEach((ws) => {
+        if (!ws.members.some((m) => m.userId === payload.id)) {
+          ws.members.push({
+            userId: payload.id,
+            role: payload.role || 'viewer',
+            joinedAt: new Date().toISOString(),
+          });
+        }
+      });
+    },
+    userEnsureInWorkspaces(state, { payload: { userId, role } }) {
+      state.workspaces.forEach((ws) => {
+        if (!ws.members.some((m) => m.userId === userId)) {
+          ws.members.push({
+            userId,
+            role: role || 'viewer',
+            joinedAt: new Date().toISOString(),
+          });
+        }
+      });
     },
     userUpdated(state, { payload: { id, patch } }) {
       const u = state.users.find((x) => x.id === id);
       if (u) Object.assign(u, patch);
     },
+    userDeleted(state, { payload: { userId } }) {
+      state.users = state.users.filter((u) => u.id !== userId);
+      state.workspaces.forEach((ws) => {
+        ws.members = ws.members.filter((m) => m.userId !== userId);
+      });
+      state.projects.forEach((p) => {
+        p.memberIds = p.memberIds.filter((id) => id !== userId);
+      });
+      if (Array.isArray(state.joinRequests)) {
+        state.joinRequests = state.joinRequests.filter((r) => r.userId !== userId);
+      }
+      state.tasks.forEach((t) => {
+        if (t.assigneeId === userId) t.assigneeId = null;
+      });
+    },
 
     /* --------------------------- workspaces ------------------------------ */
     workspaceAdded(state, { payload }) {
-      state.workspaces.push(payload);
+      const existingMemberIds = new Set((payload.members || []).map((m) => m.userId));
+      const fullMembers = [...(payload.members || [])];
+      state.users.forEach((u) => {
+        if (!existingMemberIds.has(u.id)) {
+          fullMembers.push({
+            userId: u.id,
+            role: u.role || 'viewer',
+            joinedAt: new Date().toISOString(),
+          });
+        }
+      });
+      state.workspaces.push({ ...payload, members: fullMembers });
     },
     workspaceUpdated(state, { payload: { id, patch } }) {
       const ws = state.workspaces.find((x) => x.id === id);
@@ -51,13 +98,23 @@ const dataSlice = createSlice({
       state.comments = state.comments.filter((c) => !state.tasks.find((t) => t.id === c.taskId));
     },
     memberInvited(state, { payload: { workspaceId, userId, role } }) {
-      state.workspaces
-        .find((x) => x.id === workspaceId)
-        ?.members.push({ userId, role, joinedAt: new Date().toISOString() });
+      const ws = state.workspaces.find((x) => x.id === workspaceId);
+      if (ws && !ws.members.some((m) => m.userId === userId)) {
+        ws.members.push({ userId, role, joinedAt: new Date().toISOString() });
+      }
     },
     memberRoleChanged(state, { payload: { workspaceId, userId, role } }) {
-      const m = state.workspaces.find((x) => x.id === workspaceId)?.members.find((x) => x.userId === userId);
-      if (m) m.role = role;
+      const ws = state.workspaces.find((x) => x.id === workspaceId);
+      if (ws) {
+        const m = ws.members.find((x) => x.userId === userId);
+        if (m) {
+          m.role = role;
+        } else {
+          ws.members.push({ userId, role, joinedAt: new Date().toISOString() });
+        }
+      }
+      const u = state.users.find((x) => x.id === userId);
+      if (u) u.role = role;
     },
     memberRemoved(state, { payload: { workspaceId, userId } }) {
       const ws = state.workspaces.find((x) => x.id === workspaceId);
@@ -120,6 +177,14 @@ const dataSlice = createSlice({
 
     /* ------------------------------ tasks -------------------------------- */
     taskAdded(state, { payload }) {
+      if (payload.createdById) {
+        const creator = state.users.find((u) => u.id === payload.createdById);
+        if (creator?.role === 'viewer') return;
+        if (creator?.role === 'member') {
+          const p = state.projects.find((x) => x.id === payload.projectId);
+          if (p && !p.memberIds?.includes(payload.createdById)) return;
+        }
+      }
       state.tasks.unshift(payload);
     },
     taskPatched(state, { payload: { id, patch } }) {
@@ -214,6 +279,44 @@ const dataSlice = createSlice({
       state.comments = state.comments.filter((c) => c.id !== id);
     },
 
+    /* -------------------------- project messages -------------------------- */
+    projectMessageSent(state, { payload }) {
+      if (!Array.isArray(state.projectMessages)) state.projectMessages = [];
+      state.projectMessages.push(payload);
+    },
+    projectMessageDeleted(state, { payload: { id } }) {
+      if (!Array.isArray(state.projectMessages)) return;
+      state.projectMessages = state.projectMessages.filter((m) => m.id !== id);
+    },
+
+    /* --------------------------- join requests ---------------------------- */
+    joinRequestCreated(state, { payload }) {
+      if (!Array.isArray(state.joinRequests)) state.joinRequests = [];
+      const exists = state.joinRequests.some(
+        (r) => r.projectId === payload.projectId && r.userId === payload.userId && r.status === 'pending'
+      );
+      if (!exists) {
+        state.joinRequests.push(payload);
+      }
+    },
+    joinRequestApproved(state, { payload: { requestId, projectId, userId } }) {
+      if (Array.isArray(state.joinRequests)) {
+        const req = state.joinRequests.find((r) => r.id === requestId);
+        if (req) req.status = 'approved';
+        else state.joinRequests = state.joinRequests.filter((r) => !(r.projectId === projectId && r.userId === userId));
+      }
+      const project = state.projects.find((p) => p.id === projectId);
+      if (project && !project.memberIds.includes(userId)) {
+        project.memberIds.push(userId);
+      }
+    },
+    joinRequestDeclined(state, { payload: { requestId } }) {
+      if (Array.isArray(state.joinRequests)) {
+        const req = state.joinRequests.find((r) => r.id === requestId);
+        if (req) req.status = 'declined';
+      }
+    },
+
     /* ------------------------------- import ------------------------------- */
     stateImported(state, { payload }) {
       return payload; // full replacement. one-way door, guarded by confirm()
@@ -222,7 +325,7 @@ const dataSlice = createSlice({
 });
 
 export const {
-  userAdded, userUpdated,
+  userAdded, userDeleted, userEnsureInWorkspaces, userUpdated,
   workspaceAdded, workspaceUpdated, workspaceDeleted,
   memberInvited, memberRoleChanged, memberRemoved,
   projectAdded, projectUpdated, projectArchived, projectDeleted, projectMembersToggled,
@@ -231,6 +334,8 @@ export const {
   subtaskAdded, subtaskDeleted, subtaskToggled, subtaskRenamed, subtaskPromoted, taskDemoted,
   attachmentAdded, attachmentRemoved,
   commentAdded, commentUpdated, commentDeleted,
+  projectMessageSent, projectMessageDeleted,
+  joinRequestCreated, joinRequestApproved, joinRequestDeclined,
   stateImported,
 } = dataSlice.actions;
 

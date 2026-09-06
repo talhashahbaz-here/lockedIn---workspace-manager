@@ -28,14 +28,14 @@ export const uiInitialState = {
   settings: {
     theme: 'light',
     defaultView: 'board',
-    notifPrefs: { assigned: true, mentioned: true, due: true, npc: true },
-    npcMode: true,
-    fakeLatency: true,
+    notifPrefs: { assigned: true, mentioned: true, due: true },
+    fakeLatency: false,
   },
   // ephemeral (never persisted)
   paletteOpen: false,
   mobileNavOpen: false,
   sidebarCollapsed: false,
+  logSidebarOpen: false,
   detailTaskId: null,
   composer: null, // {projectId, columnId, dueDate} | null
   bulk: { active: false, ids: [] },
@@ -86,8 +86,11 @@ const uiSlice = createSlice({
     mobileNavToggled(state, { payload }) {
       state.mobileNavOpen = payload ?? !state.mobileNavOpen;
     },
-    sidebarToggled(state) {
-      state.sidebarCollapsed = !state.sidebarCollapsed;
+    sidebarToggled(state, { payload }) {
+      state.sidebarCollapsed = typeof payload === 'boolean' ? payload : !state.sidebarCollapsed;
+    },
+    logSidebarToggled(state, { payload }) {
+      state.logSidebarOpen = typeof payload === 'boolean' ? payload : !state.logSidebarOpen;
     },
     detailTaskOpened(state, { payload }) {
       state.detailTaskId = payload;
@@ -161,7 +164,7 @@ const uiSlice = createSlice({
 export const {
   actorSet, workspaceSwitched, projectViewSet, groupBySet,
   filtersPatched, filtersCleared, sortSet, presetSaved, presetDeleted,
-  settingsPatched, paletteToggled, mobileNavToggled, sidebarToggled,
+  settingsPatched, paletteToggled, mobileNavToggled, sidebarToggled, logSidebarToggled,
   detailTaskOpened, detailTaskClosed, composerOpened, composerClosed,
   bulkToggled, bulkIdToggled, bulkSet, bulkCleared,
   loadingSet, syncStatusSet, onlineSet, toastPushed, toastDismissed, uiReset,

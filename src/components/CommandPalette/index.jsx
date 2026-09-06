@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { paletteToggled, composerOpened, settingsPatched, syncStatusSet } from '@/store/slices/uiSlice';
 import { UNDO, REDO } from '@/store/undo';
-import { globalSearch, selectUnreadCount } from '@/store/selectors';
+import { globalSearch, selectUnreadCount, selectCanCreateTasks } from '@/store/selectors';
 import { useAuth } from '@/context/Auth';
 import { fakeRequest } from '@/config/persistence';
 
@@ -25,6 +25,7 @@ export default function CommandPalette() {
   const npcMode = useSelector((s) => s.ui.settings.npcMode);
   const canUndo = useSelector((s) => s.data.past.length > 0);
   const canRedo = useSelector((s) => s.data.future.length > 0);
+  const canCreateTasks = useSelector(selectCanCreateTasks);
 
   const [q, setQ] = useState('');
   const [cursor, setCursor] = useState(0);
@@ -46,7 +47,7 @@ export default function CommandPalette() {
     const push = (section, item) => items.push({ section, ...item });
 
     const actions = [
-      { id: 'act-task', icon: Plus, label: 'new task', hint: 'N', run: () => dispatch(composerOpened({})) },
+      ...(canCreateTasks ? [{ id: 'act-task', icon: Plus, label: 'new task', hint: 'N', run: () => dispatch(composerOpened({})) }] : []),
       { id: 'act-home', icon: Home, label: 'go home', hint: '', run: () => navigate('/app/home') },
       { id: 'act-projects', icon: FolderKanban, label: 'projects', run: () => navigate('/app/projects') },
       { id: 'act-tasks', icon: ListChecks, label: 'all tasks', run: () => navigate('/app/tasks') },

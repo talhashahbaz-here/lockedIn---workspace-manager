@@ -369,9 +369,26 @@ export default function TaskDetail() {
           type="button"
           className={`icon-btn ${task.completedAt ? 'btn-accent' : ''}`}
           style={task.completedAt ? { background: 'var(--accent)' } : undefined}
-          disabled={!canEdit}
-          title={task.completedAt ? 'reopen' : 'mark shipped'}
-          onClick={() => patch({ completedAt: task.completedAt ? null : new Date().toISOString() })}
+          disabled={!canEdit || (!task.completedAt && task.assigneeId !== actor?.id)}
+          title={
+            !task.completedAt && task.assigneeId !== actor?.id
+              ? 'Only the assigned user can mark this task complete'
+              : task.completedAt
+              ? 'reopen'
+              : 'mark shipped'
+          }
+          onClick={() => {
+            if (!task.completedAt && task.assigneeId !== actor?.id) {
+              dispatch(
+                toastPushed({
+                  tone: 'warn',
+                  text: 'You cannot mark a task complete unless it is assigned to you.',
+                })
+              );
+              return;
+            }
+            patch({ completedAt: task.completedAt ? null : new Date().toISOString() });
+          }}
         >
           <Check size={16} strokeWidth={3} />
         </button>

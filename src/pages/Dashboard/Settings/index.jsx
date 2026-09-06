@@ -27,13 +27,14 @@ export default function Settings() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { confirm } = useApp();
-  const { user, updateProfile, switchUser } = useAuth();
+  const { user, updateProfile, switchUser, deleteAccount } = useAuth();
   const [params] = useSearchParams();
   const [tab, setTab] = useState(params.get('tab') ?? 'profile');
   const settings = useSelector((s) => s.ui.settings);
   const users = useSelector(selectUsers);
   const ws = useSelector(selectCurrentWorkspace);
   const perms = useSelector(selectMyPermissions);
+  const isOwnerOrAdmin = perms.role === 'owner' || perms.role === 'admin' || user?.role === 'owner' || user?.role === 'admin';
   const wsId = useSelector(selectCurrentWorkspaceId);
   const wsTasks = useSelector(selectWorkspaceTasks);
   const projects = useSelector((s) => s.data.present.projects.filter((p) => p.workspaceId === s.ui.currentWorkspaceId));
@@ -168,6 +169,21 @@ export default function Settings() {
     window.location.reload();
   };
 
+  /* ---------------------------- delete account ----------------------------- */
+  const handleDeleteAccount = async () => {
+    const ok = await confirm({
+      title: `delete account "${user?.name}"?`,
+      body: 'Your account will be permanently deleted from local storage and you will be logged out. This action cannot be undone.',
+      confirmText: 'delete account',
+      cancelText: 'cancel',
+      danger: true,
+    });
+    if (!ok) return;
+
+    await deleteAccount(user?.id);
+    navigate('/');
+  };
+
   if (!user) return null;
 
   return (
@@ -237,29 +253,6 @@ export default function Settings() {
               <div className="row" style={{ justifyContent: 'flex-end' }}>
                 <button type="button" className="btn btn-accent" onClick={saveProfile}>save profile</button>
               </div>
-
-              <hr className="divider" />
-              <div className="settings-row" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-                <div className="settings-row-copy">
-                  <span className="settings-row-title">Switch profile (multi-user demo)</span>
-                  <span className="settings-row-sub">Instantly demo roles and permissions as another mock user.</span>
-                </div>
-                <div className="filter-chips">
-                  {users.map((u) => (
-                    <button
-                      key={u.id}
-                      type="button"
-                      className={`filter-chip ${u.id === user.id ? 'on' : ''}`}
-                      onClick={() => {
-                        switchUser(u.id);
-                        dispatch(toastPushed({ text: `now viewing as ${u.name}` }));
-                      }}
-                    >
-                      {u.emoji} {u.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </>
           )}
 
@@ -304,20 +297,6 @@ export default function Settings() {
                   <option value="list">list</option>
                   <option value="calendar">calendar</option>
                 </select>
-              </div>
-              <div className="settings-row">
-                <div className="settings-row-copy">
-                  <span className="settings-row-title">Simulated teammates</span>
-                  <span className="settings-row-sub">
-                    Demo teammates occasionally comment and move cards so the workspace feels live. <Radio size={12} style={{ display: 'inline' }} />
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  className="toggle"
-                  checked={settings.npcMode}
-                  onChange={() => dispatch(settingsPatched({ npcMode: !settings.npcMode }))}
-                />
               </div>
               <div className="settings-row">
                 <div className="settings-row-copy">
@@ -491,47 +470,63 @@ export default function Settings() {
           {tab === 'danger' && (
             <>
               <h3 style={{ fontSize: 19 }}>☠️ danger zone</h3>
-              <div className="danger-zone">
-                <div className="settings-row-copy">
-                  <span className="settings-row-title">delete this workspace</span>
-                  <span className="settings-row-sub">
-                    "{ws?.name}" and its {projects.length} project(s) + {wsTasks.length} task(s) → gone. undo toast appears,
-                    but do not rely on it.
-                  </span>
+              {isOwnerOrAdmin ? (
+                <>
+                  <div className="danger-zone">
+                    <div className="settings-row-copy">
+                      <span className="settings-row-title">delete this workspace</span>
+                      <span className="settings-row-sub">
+                        "{ws?.name}" and its {projects.length} project(s) + {wsTasks.length} task(s) → gone. undo toast appears,
+                        but do not rely on it.
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      disabled={!perms.can('deleteWorkspace')}
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: `delete "${ws?.name}"?`,
+                          body: 'Everything inside this workspace will be deleted.',
+                          confirmText: 'delete workspace',
+                        });
+                        if (!ok) return;
+                        dispatch(workspaceDeleted({ id: wsId }));
+                        const next = workspaces.find((w) => w.id !== wsId);
+                        if (next) dispatch(workspaceSwitched(next.id));
+                        dispatch(toastPushed({ tone: 'undo', text: 'workspace deleted', action: { label: 'undo', type: '@history/undo' } }));
+                        navigate('/app/projects');
+                      }}
+                    >
+                      <Trash2 size={13} /> delete workspace
+                    </button>
+                    {!perms.can('deleteWorkspace') && (
+                      <span className="mono-label">only owners can delete workspaces. you are {perms.role}.</span>
+                    )}
+                  </div>
+                  <div className="danger-zone">
+                    <div className="settings-row-copy">
+                      <span className="settings-row-title">Reset all app data</span>
+                      <span className="settings-row-sub">Wipes all local data (IndexedDB) and restores the original demo data. Your login survives.</span>
+                    </div>
+                    <button type="button" className="btn btn-danger" onClick={resetAll}>
+                      <Trash2 size={13} /> reset everything
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="danger-zone">
+                  <div className="settings-row-copy">
+                    <span className="settings-row-title">delete account</span>
+                    <span className="settings-row-sub">
+                      Permanently delete your account "{user?.name}" ({user?.email}) and remove your profile from all workspaces and local storage. You will be logged out immediately.
+                    </span>
+                  </div>
+                  <button type="button" className="btn btn-danger" onClick={handleDeleteAccount}>
+                    <Trash2 size={13} /> delete account
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  disabled={!perms.can('deleteWorkspace')}
-                  onClick={async () => {
-                    const ok = await confirm({
-                      title: `delete "${ws?.name}"?`,
-                      body: 'Everything inside this workspace will be deleted.',
-                      confirmText: 'delete workspace',
-                    });
-                    if (!ok) return;
-                    dispatch(workspaceDeleted({ id: wsId }));
-                    const next = workspaces.find((w) => w.id !== wsId);
-                    if (next) dispatch(workspaceSwitched(next.id));
-                    dispatch(toastPushed({ tone: 'undo', text: 'workspace deleted', action: { label: 'undo', type: '@history/undo' } }));
-                    navigate('/app/projects');
-                  }}
-                >
-                  <Trash2 size={13} /> delete workspace
-                </button>
-                {!perms.can('deleteWorkspace') && (
-                  <span className="mono-label">only owners can delete workspaces. you are {perms.role}.</span>
-                )}
-              </div>
-              <div className="danger-zone">
-                <div className="settings-row-copy">
-                  <span className="settings-row-title">Reset all app data</span>
-                  <span className="settings-row-sub">Wipes all local data (IndexedDB) and restores the original demo data. Your login survives.</span>
-                </div>
-                <button type="button" className="btn btn-danger" onClick={resetAll}>
-                  <Trash2 size={13} /> reset everything
-                </button>
-              </div>
+              )}
             </>
           )}
         </div>

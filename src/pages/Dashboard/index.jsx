@@ -1,6 +1,7 @@
 /* Dashboard — the app shell. sidebar (workspace switcher + nav), topbar
    (search, sync, undo/redo, theme, bell, user menu), routed content.
-   Also hosts the global overlays: palette, composer, detail, bulk bar. */
+   Hosts global overlays and real-time LogSidebar.
+   Multi-account sessions are fully managed from the User Profile dropdown. */
 
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,7 +9,7 @@ import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   Search, Zap, ChevronDown, Plus, Bell, LogOut, Settings as SettingsIcon,
   Sun, Moon, PanelLeftClose, PanelLeft, Menu as MenuIcon,
-  UserCog,
+  UserCog, ScrollText, UserPlus, Check, KeyRound,
 } from 'lucide-react';
 import { MENU_MAIN, MENU_TEAM } from './MenuItems';
 import DashboardRoutes from './Routes';
@@ -19,15 +20,15 @@ import TaskDetail from '@/components/TaskDetail';
 import BulkBar from '@/components/BulkBar';
 import Toaster from '@/components/Toaster';
 import Avatar from '@/components/Avatar';
+import LogSidebar from '@/components/LogSidebar';
 import { useAuth } from '@/context/Auth';
 import { useApp } from '@/context/AppProvider';
-import { ROLE_VIBES } from '@/config/global';
-import { uid } from '@/config/global';
+import { ROLE_VIBES, uid } from '@/config/global';
 import {
-  workspaceSwitched, mobileNavToggled, sidebarToggled, paletteToggled,
+  workspaceSwitched, mobileNavToggled, sidebarToggled, logSidebarToggled, paletteToggled,
   settingsPatched, toastPushed, workspaceAdded, workspaceUpdated,
 } from '@/store/slices';
-import { selectUnreadCount, selectMyRole, selectProjects, selectUI, selectCurrentWorkspace, selectActor, selectVisibleWorkspaces } from '@/store/selectors';
+import { selectUnreadCount, selectMyRole, selectProjects, selectUI, selectCurrentWorkspace, selectActor, selectVisibleWorkspaces, selectCanCreateTasks } from '@/store/selectors';
 import Modal from '@/components/Modal';
 
 /* --------------------------- workspace switcher ---------------------------- */
@@ -44,8 +45,10 @@ function WorkspaceSwitcher({ collapsed }) {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ name: '', emoji: '🧢', color: 'lime' });
+  const [form, setForm] = useState({ name: '', emoji: '🏢', color: 'lime' });
   const ref = useRef(null);
+
+  const canManageWs = role === 'owner' || role === 'admin';
 
   useEffect(() => {
     const close = (e) => {
@@ -55,48 +58,50 @@ function WorkspaceSwitcher({ collapsed }) {
     return () => document.removeEventListener('mousedown', close);
   }, []);
 
-  const createWorkspace = async (e) => {
+  const createWorkspace = (e) => {
     e.preventDefault();
     if (!form.name.trim()) return;
+    if (!canManageWs) {
+      dispatch(toastPushed({ tone: 'warn', text: 'Only owners and admins can create workspaces.' }));
+      return;
+    }
     const id = uid('ws');
-    dispatch(workspaceAdded({
-      id,
-      name: form.name.trim().toLowerCase(),
-      emoji: form.emoji,
-      color: form.color,
-      defaultView: 'board',
-      createdAt: new Date().toISOString(),
-      members: [{ userId: actor.id, role: 'owner', joinedAt: new Date().toISOString() }],
-    }));
+    dispatch(
+      workspaceAdded({
+        id,
+        name: form.name.trim().toLowerCase(),
+        emoji: form.emoji || '🏢',
+        color: form.color || 'lime',
+        defaultView: 'board',
+        createdAt: new Date().toISOString(),
+        members: [{ userId: actor.id, role: 'owner', joinedAt: new Date().toISOString() }],
+      })
+    );
     dispatch(workspaceSwitched(id));
+    dispatch(toastPushed({ text: `Workspace "${form.name.trim()}" created` }));
     setCreating(false);
-    setForm({ name: '', emoji: '🧢', color: 'lime' });
-    navigate('/app/projects');
-    dispatch(toastPushed({ text: 'Workspace created' }));
+    setForm({ name: '', emoji: '🏢', color: 'lime' });
   };
 
-  const renameWorkspace = async (e) => {
+  const renameWorkspace = (e) => {
     e.preventDefault();
     if (!form.name.trim() || !ws) return;
     dispatch(workspaceUpdated({ id: ws.id, patch: { name: form.name.trim().toLowerCase() } }));
+    dispatch(toastPushed({ text: 'Workspace renamed' }));
     setEditing(false);
   };
 
   const leaveWorkspace = async () => {
-    setOpen(false);
-    if (workspaces.length <= 1) {
-      dispatch(toastPushed({ tone: 'warn', text: 'You need at least one workspace.' }));
-      return;
-    }
+    if (!ws) return;
     const ok = await confirm({
-      title: `Delete "${ws.name}"?`,
-      body: `the workspace, its ${projects.filter((p) => p.workspaceId === ws.id).length} project(s) and all their tasks will be deleted.`,
-      confirmText: 'Delete workspace',
+      title: `delete "${ws.name}"?`,
+      body: 'All projects and tasks in this workspace will be deleted for everyone. This cannot be undone.',
+      confirmText: 'delete workspace', danger: true,
     });
     if (!ok) return;
+    const others = workspaces.filter((w) => w.id !== ws.id);
     dispatch({ type: 'data/workspaceDeleted', payload: { id: ws.id } });
-    const next = workspaces.find((w) => w.id !== ws.id);
-    dispatch(workspaceSwitched(next?.id ?? null));
+    if (others.length) dispatch(workspaceSwitched(others[0].id));
     dispatch(toastPushed({ tone: 'undo', text: `"${ws.name}" deleted`, action: { label: 'undo', type: '@history/undo' } }));
   };
 
@@ -129,22 +134,24 @@ function WorkspaceSwitcher({ collapsed }) {
             </button>
           ))}
           <div className="dropdown-sep" />
-          {ws && (
+          {ws && canManageWs && (
             <button type="button" className="ws-menu-item" onClick={() => { setEditing(true); setForm({ name: ws.name, emoji: ws.emoji, color: ws.color }); setOpen(false); }}>
               ✏️ rename current
             </button>
           )}
-          <button type="button" className="ws-menu-item" onClick={() => { setCreating(true); setOpen(false); }}>
-            ➕ new workspace
-          </button>
-          {ws && (
+          {canManageWs && (
+            <button type="button" className="ws-menu-item" onClick={() => { setCreating(true); setOpen(false); }}>
+              ➕ new workspace
+            </button>
+          )}
+          {ws && role === 'owner' && (
             <button type="button" className="ws-menu-item danger-item" style={{ color: 'var(--red)' }} onClick={leaveWorkspace}>
               🗑️ delete current
             </button>
           )}
           {ws && (
             <span className="mono-label" style={{ padding: '4px 10px 8px', display: 'block' }}>
-              you are: {role} — {ROLE_VIBES[role] ?? 'unknown'}
+              role: {role} — {ROLE_VIBES[role] ?? 'member'}
             </span>
           )}
         </div>
@@ -189,12 +196,19 @@ function WorkspaceSwitcher({ collapsed }) {
 function Topbar({ onBurger }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, loggedInUsers, switchAccount, login, logout, logoutAll } = useAuth();
   const { confirm } = useApp();
   const unread = useSelector(selectUnreadCount);
   const theme = useSelector((s) => s.ui.settings.theme);
   const collapsed = useSelector((s) => s.ui.sidebarCollapsed);
+  const logSidebarOpen = useSelector((s) => s.ui.logSidebarOpen);
+  const canCreateTasks = useSelector(selectCanCreateTasks);
+
   const [menuOpen, setMenuOpen] = useState(false);
+  const [addAccountOpen, setAddAccountOpen] = useState(false);
+  const [addForm, setAddForm] = useState({ email: '', password: '' });
+  const [addError, setAddError] = useState('');
+  const [addBusy, setAddBusy] = useState(false);
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -205,16 +219,48 @@ function Topbar({ onBurger }) {
     return () => document.removeEventListener('mousedown', close);
   }, []);
 
-  const doLogout = async () => {
+  const doLogoutCurrent = async () => {
     setMenuOpen(false);
     const ok = await confirm({
-      title: 'log out?',
-      body: 'your session ends. your data stays safe on this device.',
+      title: `log out ${user?.name}?`,
+      body: loggedInUsers.length > 1
+        ? 'You will switch to another active logged-in account.'
+        : 'Your session ends. Your data stays safe on this device.',
       confirmText: 'log out', danger: false,
     });
     if (!ok) return;
-    logout();
+    logout(user?.id);
+    if (loggedInUsers.length <= 1) {
+      navigate('/login');
+    }
+  };
+
+  const doLogoutAll = async () => {
+    setMenuOpen(false);
+    const ok = await confirm({
+      title: 'log out of all accounts?',
+      body: 'All active sessions will be terminated.',
+      confirmText: 'log out all', danger: true,
+    });
+    if (!ok) return;
+    logoutAll();
     navigate('/login');
+  };
+
+  const handleAddAccountSubmit = async (e) => {
+    e.preventDefault();
+    setAddError('');
+    setAddBusy(true);
+    try {
+      await login(addForm.email, addForm.password);
+      dispatch(toastPushed({ text: `Logged in as ${addForm.email}` }));
+      setAddAccountOpen(false);
+      setAddForm({ email: '', password: '' });
+    } catch (err) {
+      setAddError(err.message);
+    } finally {
+      setAddBusy(false);
+    }
   };
 
   return (
@@ -233,6 +279,16 @@ function Topbar({ onBurger }) {
       </button>
 
       <div className="topbar-actions">
+        {/* Real-time Activity Log Toggle Button */}
+        <button
+          type="button"
+          className={`icon-btn ${logSidebarOpen ? 'active' : ''}`}
+          title="Activity log sidebar"
+          onClick={() => dispatch(logSidebarToggled())}
+        >
+          <ScrollText size={15} strokeWidth={2.5} />
+        </button>
+
         <button
           type="button"
           className="icon-btn"
@@ -247,36 +303,156 @@ function Topbar({ onBurger }) {
           {unread > 0 && <span className="notif-count">{unread > 99 ? '99+' : unread}</span>}
         </NavLink>
 
-        <button type="button" className="btn btn-sm btn-accent" onClick={() => dispatch({ type: 'ui/composerOpened' })}>
-          <Plus size={13} strokeWidth={3} /> task
-        </button>
+        {canCreateTasks && (
+          <button type="button" className="btn btn-sm btn-accent" onClick={() => dispatch({ type: 'ui/composerOpened' })}>
+            <Plus size={13} strokeWidth={3} /> task
+          </button>
+        )}
 
+        {/* User Profile Menu & Multi-Account Switcher */}
         <div className="user-menu" ref={menuRef}>
           <button type="button" className="user-menu-trigger" onClick={() => setMenuOpen((o) => !o)}>
             <Avatar user={user} size={26} />
-            {user?.name.split(' ')[0]}
+            <span style={{ maxWidth: 80, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user?.name.split(' ')[0]}
+            </span>
+            <span className="tag tag-accent" style={{ fontSize: 9, padding: '1px 5px', textTransform: 'uppercase' }}>
+              {user?.role || 'viewer'}
+            </span>
           </button>
+
           {menuOpen && (
-            <div className="dropdown">
+            <div className="dropdown" style={{ minWidth: 260 }}>
               <div className="dropdown-head">
-                <span style={{ fontWeight: 700 }}>{user?.name}</span>
-                <span className="dropdown-bio">{user?.bio}</span>
+                <div className="row-between">
+                  <span style={{ fontWeight: 700 }}>{user?.name}</span>
+                  <span className="tag tag-blue" style={{ fontSize: 10 }}>{user?.role || 'viewer'}</span>
+                </div>
                 <span className="dropdown-bio mono-label">{user?.email}</span>
               </div>
+
+              {/* Multi-Account Sessions Section */}
+              <div className="mono-label" style={{ padding: '8px 12px 4px', background: 'var(--bg)', borderTop: 'var(--bd)', borderBottom: 'var(--bd)' }}>
+                Active Accounts ({loggedInUsers.length})
+              </div>
+
+              <div className="dropdown-accounts-list" style={{ maxHeight: 180, overflowY: 'auto' }}>
+                {loggedInUsers.map((acc) => {
+                  const isActive = acc.id === user?.id;
+                  return (
+                    <button
+                      key={acc.id}
+                      type="button"
+                      className={`dropdown-item ${isActive ? 'active' : ''}`}
+                      style={{ justifyContent: 'space-between' }}
+                      onClick={() => {
+                        if (!isActive) {
+                          switchAccount(acc.id);
+                          dispatch(toastPushed({ text: `Switched to ${acc.name} (${acc.role || 'viewer'})` }));
+                        }
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <div className="row-gap-6">
+                        <Avatar user={acc} size={20} />
+                        <span style={{ fontWeight: isActive ? 700 : 500 }}>{acc.name}</span>
+                        <span className="mono-label" style={{ fontSize: 10 }}>({acc.role || 'viewer'})</span>
+                      </div>
+                      {isActive && <Check size={14} color="var(--accent-text)" strokeWidth={3} />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Add / Log into Another Account Button */}
+              <button
+                type="button"
+                className="dropdown-item"
+                style={{ color: 'var(--accent-text)', fontWeight: 600 }}
+                onClick={() => {
+                  setMenuOpen(false);
+                  setAddAccountOpen(true);
+                }}
+              >
+                <UserPlus size={14} strokeWidth={2.5} /> + Add another account
+              </button>
+
+              <div className="dropdown-sep" />
+
               <button type="button" className="dropdown-item" onClick={() => { setMenuOpen(false); navigate('/app/settings?tab=profile'); }}>
                 <UserCog size={14} strokeWidth={2.5} /> edit profile
               </button>
               <button type="button" className="dropdown-item" onClick={() => { setMenuOpen(false); navigate('/app/settings'); }}>
                 <SettingsIcon size={14} strokeWidth={2.5} /> settings
               </button>
+
               <div className="dropdown-sep" />
-              <button type="button" className="dropdown-item danger" onClick={doLogout}>
-                <LogOut size={14} strokeWidth={2.5} /> log out
+
+              <button type="button" className="dropdown-item danger" onClick={doLogoutCurrent}>
+                <LogOut size={14} strokeWidth={2.5} /> log out this account
               </button>
+              {loggedInUsers.length > 1 && (
+                <button type="button" className="dropdown-item danger" onClick={doLogoutAll}>
+                  <LogOut size={14} strokeWidth={2.5} /> log out all accounts
+                </button>
+              )}
             </div>
           )}
         </div>
       </div>
+
+      {/* Add Account Modal */}
+      {addAccountOpen && (
+        <Modal
+          open
+          onClose={() => setAddAccountOpen(false)}
+          eyebrow="multi-account login"
+          title="Log into another account"
+          width={440}
+        >
+          <form className="stack-16" onSubmit={handleAddAccountSubmit}>
+            <p className="auth-sub" style={{ margin: 0 }}>
+              Add another account to your active sessions. Passwords for mock accounts (owner, admin, member, viewer) are in <code>passwords.txt</code>.
+            </p>
+            {addError && <div className="auth-error">⚠ {addError}</div>}
+            <label className="field">
+              <span className="mono-label">email</span>
+              <input
+                className="input"
+                type="email"
+                autoFocus
+                placeholder="e.g. admin@lockedin.fun"
+                value={addForm.email}
+                onChange={(e) => setAddForm({ ...addForm, email: e.target.value })}
+                required
+              />
+            </label>
+            <label className="field">
+              <span className="mono-label">password</span>
+              <input
+                className="input"
+                type="password"
+                placeholder="••••••••"
+                value={addForm.password}
+                onChange={(e) => setAddForm({ ...addForm, password: e.target.value })}
+                required
+              />
+            </label>
+            <div className="row" style={{ justifyContent: 'flex-end' }}>
+              <button type="button" className="btn" onClick={() => setAddAccountOpen(false)}>
+                cancel
+              </button>
+              <button type="submit" className="btn btn-accent" disabled={addBusy}>
+                {addBusy ? 'authenticating…' : 'Log in & Add session'}
+              </button>
+            </div>
+            <div className="auth-alt" style={{ textAlign: 'left', fontSize: 11 }}>
+              <KeyRound size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} />
+              Credentials available in <strong>passwords.txt</strong> in the root folder.
+            </div>
+          </form>
+        </Modal>
+      )}
     </header>
   );
 }
@@ -287,12 +463,12 @@ function Sidebar() {
   const dispatch = useDispatch();
   const collapsed = useSelector((s) => s.ui.sidebarCollapsed);
   const mobileOpen = useSelector((s) => s.ui.mobileNavOpen);
-  const npcMode = useSelector((s) => s.ui.settings.npcMode);
   const unread = useSelector(selectUnreadCount);
+  const actor = useSelector(selectActor);
 
   const NavSections = [
     { label: 'workspace', items: MENU_MAIN },
-    { label: 'Team', items: MENU_TEAM },
+    { label: 'team', items: MENU_TEAM },
   ];
 
   return (
@@ -326,8 +502,8 @@ function Sidebar() {
       </nav>
 
       <div className="sidebar-foot">
-        <span className="npc-pill" title={npcMode ? 'Simulated teammates active' : 'Simulated teammates muted'}>
-          <span className={`npc-dot ${npcMode ? '' : 'off'}`} /> {npcMode ? 'teammates online' : 'muted'}
+        <span className="mono-label" style={{ fontSize: 11 }}>
+          active: <strong>{actor?.name.split(' ')[0]}</strong> ({actor?.role || 'viewer'})
         </span>
         <button type="button" className="icon-btn icon-btn-sm mobile-top-row" onClick={() => dispatch(mobileNavToggled(false))} aria-label="close nav">
           ✕
@@ -345,7 +521,6 @@ export default function Dashboard() {
   const actor = useSelector(selectActor);
   const mobileOpen = useSelector(selectUI).mobileNavOpen;
   const workspaces = useSelector(selectVisibleWorkspaces);
-  // if the user skipped onboarding but still has no workspace, offer a way back in
   const [restartOnboarding, setRestartOnboarding] = useState(false);
   const memberAnywhere = workspaces.length > 0;
 
@@ -385,6 +560,9 @@ export default function Dashboard() {
         <Topbar onBurger={() => dispatch(mobileNavToggled(true))} />
         <DashboardRoutes />
       </div>
+
+      {/* Real-time Activity Log Sidebar */}
+      <LogSidebar />
 
       <CommandPalette />
       <TaskComposer />

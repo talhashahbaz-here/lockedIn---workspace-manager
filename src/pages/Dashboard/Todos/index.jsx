@@ -1,14 +1,14 @@
-/* Todos/index.jsx — the shared task workspace. given a project (or a global
-   task set), it renders the view switcher (board/list/calendar), the filter
-   bar, and the current view. used by Todos/All and the calendar page. */
+﻿/* Todos/index.jsx — the shared task workspace.
+   Supports Kanban board view, list view, calendar view, and project message thread. */
 
 import { useDispatch, useSelector } from 'react-redux';
-import { Columns3, Table2, CalendarDays, Lock } from 'lucide-react';
+import { Columns3, Table2, CalendarDays, Lock, MessageSquare } from 'lucide-react';
 import BoardView from '@/components/BoardView';
 import ListView from '@/components/ListView';
 import CalendarView from '@/components/CalendarView';
 import FilterBar from '@/components/FilterBar';
 import EmptyState from '@/components/EmptyState';
+import ProjectMessages from '@/components/ProjectMessages';
 import { projectViewSet } from '@/store/slices/uiSlice';
 import { selectUI, selectUsers, selectMyPermissions } from '@/store/selectors';
 
@@ -44,8 +44,13 @@ export default function TaskWorkspace({
       <div className="row-between row-wrap">
         <div className="view-switcher">
           {canBoard && (
-            <button type="button" className={view === 'board' ? 'active' : ''} onClick={() => setView('board')}>
-              <Columns3 size={13} strokeWidth={2.5} /> board
+            <button
+              type="button"
+              className={view === 'board' ? 'active' : ''}
+              onClick={() => setView('board')}
+              title="Kanban task board (drag tasks between states)"
+            >
+              <Columns3 size={13} strokeWidth={2.5} /> kanban board
             </button>
           )}
           <button type="button" className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}>
@@ -54,6 +59,16 @@ export default function TaskWorkspace({
           <button type="button" className={view === 'calendar' ? 'active' : ''} onClick={() => setView('calendar')}>
             <CalendarDays size={13} strokeWidth={2.5} /> calendar
           </button>
+          {project && (
+            <button
+              type="button"
+              className={view === 'messages' ? 'active' : ''}
+              onClick={() => setView('messages')}
+              title="Project messages and discussions"
+            >
+              <MessageSquare size={13} strokeWidth={2.5} /> discussion
+            </button>
+          )}
         </div>
         <span className="task-view-note">
           {!perms.can('editTasks') && (
@@ -64,7 +79,9 @@ export default function TaskWorkspace({
         </span>
       </div>
 
-      {tasks.length === 0 ? (
+      {view === 'messages' && project ? (
+        <ProjectMessages project={project} members={members} />
+      ) : tasks.length === 0 ? (
         <EmptyState
           emoji="🫙"
           title="no tasks match"

@@ -100,14 +100,14 @@ export const fakeRequest = (ms, failRate = 0) =>
 export async function hydrateState() {
   try {
     const saved = await idbGet(STORAGE_KEYS.state);
-    if (saved && saved.version === 2 && Array.isArray(saved.data?.tasks)) {
+    if (saved && saved.version === 3 && Array.isArray(saved.data?.tasks)) {
       return saved;
     }
   } catch {
     /* corrupted or unavailable — reseed below */
   }
   return {
-    version: 2,
+    version: 3,
     savedAt: Date.now(),
     data: buildSeedState(),
     logs: buildSeedLogs(),
@@ -120,9 +120,8 @@ export async function hydrateState() {
       settings: {
         theme: 'light',
         defaultView: 'board',
-        notifPrefs: { assigned: true, mentioned: true, due: true, npc: true },
-        npcMode: true,
-        fakeLatency: true,
+        notifPrefs: { assigned: true, mentioned: true, due: true },
+        fakeLatency: false,
       },
     },
   };
@@ -130,7 +129,7 @@ export async function hydrateState() {
 
 export async function persistState(payload) {
   try {
-    await idbSet(STORAGE_KEYS.state, { ...payload, version: 2, savedAt: Date.now() });
+    await idbSet(STORAGE_KEYS.state, { ...payload, version: 3, savedAt: Date.now() });
   } catch {
     /* offline / quota — the app keeps running on state alone */
   }

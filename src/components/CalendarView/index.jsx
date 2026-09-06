@@ -7,13 +7,14 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { dayKey, priorityOf } from '@/config/global';
 import { detailTaskOpened, composerOpened } from '@/store/slices/uiSlice';
 import { patchTaskOptimistic } from '@/store/slices/dataSlice';
-import { selectMyPermissions } from '@/store/selectors';
+import { selectMyPermissions, selectCanCreateTasks } from '@/store/selectors';
 
 const DOW = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
 export default function CalendarView({ tasks, users }) {
   const dispatch = useDispatch();
   const perms = useSelector(selectMyPermissions);
+  const canCreateTasks = useSelector(selectCanCreateTasks);
   const [cursor, setCursor] = useState(() => {
     const d = new Date();
     return { y: d.getFullYear(), m: d.getMonth() };
@@ -85,13 +86,15 @@ export default function CalendarView({ tasks, users }) {
           today
         </button>
         <span className="spacer" />
-        <button
-          type="button"
-          className="btn btn-sm btn-accent"
-          onClick={() => dispatch(composerOpened({ dueDate: dayKey(new Date()) }))}
-        >
-          + task
-        </button>
+        {canCreateTasks && (
+          <button
+            type="button"
+            className="btn btn-sm btn-accent"
+            onClick={() => dispatch(composerOpened({ dueDate: dayKey(new Date()) }))}
+          >
+            + task
+          </button>
+        )}
       </div>
 
       <div className="cal-grid">
@@ -107,7 +110,7 @@ export default function CalendarView({ tasks, users }) {
             <div
               key={i}
               className={`cal-cell ${inMonth ? '' : 'outside'} ${isToday ? 'today-cell' : ''} ${dropKey === k ? 'drop-target' : ''}`}
-              onClick={() => perms.can('editTasks') && dispatch(composerOpened({ dueDate: k }))}
+              onClick={() => canCreateTasks && dispatch(composerOpened({ dueDate: k }))}
               onDragOver={(e) => {
                 if (dragTask) {
                   e.preventDefault();

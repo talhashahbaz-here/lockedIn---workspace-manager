@@ -1,14 +1,14 @@
 /* Users — members & roles. invite (fake), change roles, remove members,
    and the permission matrix so everyone knows who can do what. */
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { UserPlus, Trash2, ShieldCheck, Crown, Shield, Eye } from 'lucide-react';
 import Avatar from '@/components/Avatar';
 import EmptyState from '@/components/EmptyState';
 import Modal from '@/components/Modal';
 import { ROLES, ROLE_VIBES, can as roleCan } from '@/config/global';
-import { memberRoleChanged, memberRemoved, memberInvited } from '@/store/slices/dataSlice';
+import { memberRoleChanged, memberRemoved, memberInvited, userEnsureInWorkspaces } from '@/store/slices/dataSlice';
 import { toastPushed } from '@/store/slices/uiSlice';
 import {
   selectCurrentWorkspace, selectUsers, selectMyPermissions, selectActorId, selectActiveWorkspaceProjects,
@@ -41,13 +41,45 @@ export default function Users() {
   const [inviting, setInviting] = useState(false);
   const [inviteForm, setInviteForm] = useState({ userId: '', role: 'member' });
 
+  // Ensure all registered and logged-in users are persisted into workspace members
+  useEffect(() => {
+    if (!ws) return;
+    users.forEach((u) => {
+      if (!ws.members?.some((m) => m.userId === u.id)) {
+        dispatch(userEnsureInWorkspaces({ userId: u.id, role: u.role || 'viewer' }));
+      }
+    });
+  }, [ws, users, dispatch]);
+
+  // Compute members list reliably: include all ws.members and any users from users list
+  const members = useMemo(() => {
+    if (!ws) return [];
+    const map = new Map();
+    (ws.members || []).forEach((m) => {
+      const u = users.find((usr) => usr.id === m.userId);
+      if (u) map.set(m.userId, { ...m, user: u });
+    });
+
+    users.forEach((u) => {
+      if (!map.has(u.id)) {
+        map.set(u.id, {
+          userId: u.id,
+          role: u.role || 'viewer',
+          joinedAt: new Date().toISOString(),
+          user: u,
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [ws, users]);
+
+  const candidates = useMemo(
+    () => users.filter((u) => !members.some((m) => m.userId === u.id)),
+    [users, members]
+  );
+
   if (!ws) return null;
-
-  const members = ws.members
-    .map((m) => ({ ...m, user: users.find((u) => u.id === m.userId) }))
-    .filter((m) => m.user);
-
-  const candidates = users.filter((u) => !ws.members.some((m) => m.userId === u.id));
 
   const setRole = (member, role) => {
     if (!roleCan(perms.role, 'assignRoles')) {

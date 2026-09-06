@@ -19,24 +19,9 @@ export default function PrivateRoute({ children }) {
 }
 
 export function RedirectIfAuthed({ children }) {
-  const { user, hydrated, switchUser } = useAuth();
-  const [params] = useSearchParams();
-  const users = useSelector(selectUsers);
-  const as = params.get('as');
-  const doneRef = useRef(false);
+  const { user, hydrated } = useAuth();
 
   if (!hydrated) return <ScreenLoader label="checking your creds…" />;
-
-  if (user) {
-    // ?as=<userId> switches profiles even when already logged in (demo links)
-    if (as && !doneRef.current) {
-      const target = users.find((u) => u.id === as || u.email === as);
-      if (target && target.id !== user.id) {
-        doneRef.current = true;
-        switchUser(target.id);
-      }
-    }
-    return <Navigate to="/app" replace />;
-  }
+  if (user) return <Navigate to="/app" replace />;
   return children;
 }

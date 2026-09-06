@@ -8,37 +8,40 @@ import Modal from '../Modal';
 import { uid, PRIORITIES, LABEL_POOL } from '@/config/global';
 import { taskAdded } from '@/store/slices/dataSlice';
 import { composerClosed, toastPushed } from '@/store/slices/uiSlice';
-import { selectActiveWorkspaceProjects, selectCurrentWorkspace } from '@/store/selectors';
+import { selectCreatableProjects, selectCurrentWorkspace, selectActorId, selectActor } from '@/store/selectors';
 import { fakeRequest } from '@/config/persistence';
 
 export default function TaskComposer() {
   const dispatch = useDispatch();
   const composer = useSelector((s) => s.ui.composer);
-  const projects = useSelector(selectActiveWorkspaceProjects);
+  const creatableProjects = useSelector(selectCreatableProjects);
   const ws = useSelector(selectCurrentWorkspace);
   const users = useSelector((s) => s.data.present.users);
+  const actorId = useSelector(selectActorId);
+  const actor = useSelector(selectActor);
+  const isViewer = actor?.role === 'viewer';
 
   const [form, setForm] = useState(null);
 
   useEffect(() => {
     if (!composer) return;
-    const firstProject =
-      projects.find((p) => p.id === composer.projectId) ?? projects[0];
+    const targetProject =
+      creatableProjects.find((p) => p.id === composer.projectId) ?? creatableProjects[0];
     setForm({
       title: '',
       description: '',
-      projectId: firstProject?.id ?? '',
-      columnId: composer.columnId ?? firstProject?.columns[0]?.id ?? '',
+      projectId: targetProject?.id ?? '',
+      columnId: composer.columnId ?? targetProject?.columns[0]?.id ?? '',
       priority: 'medium',
       dueDate: composer.dueDate ?? '',
       assigneeId: '',
       labels: [],
     });
-  }, [composer, projects]);
+  }, [composer, creatableProjects]);
 
   const project = useMemo(
-    () => projects.find((p) => p.id === form?.projectId),
-    [projects, form?.projectId]
+    () => creatableProjects.find((p) => p.id === form?.projectId),
+    [creatableProjects, form?.projectId]
   );
   const memberUsers = useMemo(
     () => (project ? users.filter((u) => project.memberIds.includes(u.id)) : users),
@@ -55,6 +58,12 @@ export default function TaskComposer() {
   const submit = async (e) => {
     e.preventDefault();
     if (!form.title.trim() || !form.projectId || !form.columnId) return;
+
+    if (!creatableProjects.some((p) => p.id === form.projectId)) {
+      dispatch(toastPushed({ tone: 'warn', text: 'You can only create tasks in projects you are a member of.' }));
+      return;
+    }
+
     dispatch(composerClosed());
     const task = {
       id: uid('t'),
@@ -69,7 +78,7 @@ export default function TaskComposer() {
       labels: form.labels,
       subtasks: [],
       attachments: [],
-      createdById: null,
+      createdById: actorId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       completedAt: null,
@@ -80,6 +89,25 @@ export default function TaskComposer() {
     // purely theatrical save indicator
     await fakeRequest(200);
   };
+
+  if (creatableProjects.length === 0) {
+    return (
+      <Modal open onClose={() => dispatch(composerClosed())} eyebrow="new task" title="Cannot create tasks" width={460}>
+        <div className="empty-state" style={{ padding: '24px 0', textAlign: 'center' }}>
+          <div className="empty-emoji">🔒</div>
+          <h4 className="empty-title">Cannot create task</h4>
+          <p className="empty-sub" style={{ margin: '8px 0 20px' }}>
+            {isViewer
+              ? 'Viewers cannot create tasks. Request to join a project to become a member.'
+              : 'You can only create tasks in projects you are a member of. Request to join a project first.'}
+          </p>
+          <button type="button" className="btn btn-accent" onClick={() => dispatch(composerClosed())}>
+            Close
+          </button>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal open onClose={() => dispatch(composerClosed())} eyebrow="new task ✳ n" title="New task" width={620}>
@@ -113,11 +141,11 @@ export default function TaskComposer() {
               className="input select"
               value={form.projectId}
               onChange={(e) => {
-                const p = projects.find((x) => x.id === e.target.value);
+                const p = creatableProjects.find((x) => x.id === e.target.value);
                 set({ projectId: e.target.value, columnId: p?.columns[0]?.id ?? '', assigneeId: '' });
               }}
             >
-              {projects.map((p) => (
+              {creatableProjects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.emoji} {p.name}
                 </option>

@@ -16,8 +16,6 @@ import { activityLogged, notificationPushed } from './slices/logSlice';
 import { toastPushed } from './slices/uiSlice';
 import { persistState } from '@/config/persistence';
 
-export const NPC_TICK = 'app/npcTick';
-
 /* ------------------------------- undo marker ------------------------------- */
 
 const undoMarker = () => () => (next) => (action) => {
@@ -38,98 +36,11 @@ const taskOf = (state, id) => state.data.present.tasks.find((t) => t.id === id);
 const pushActivity = (dispatch, state, entry) =>
   dispatch(activityLogged({ id: uid('a'), ts: Date.now(), ...entry }));
 
-const pushNotification = (dispatch, state, userId, type, text, taskId = null) => {
+const pushNotification = (dispatch, state, userId, type, text, taskId = null, projectId = null) => {
   // prefs only gate notifications for the *current* user
   if (userId === state.ui.actorId && state.ui.settings.notifPrefs[type] === false) return;
-  dispatch(notificationPushed({ id: uid('n'), userId, ts: Date.now(), type, text, read: false, taskId }));
+  dispatch(notificationPushed({ id: uid('n'), userId, ts: Date.now(), type, text, read: false, taskId, projectId }));
 };
-
-/* ---------------------------- npc coworker brain --------------------------- */
-
-const NPC_COMMENTS = [
-  'Moving this to in progress.',
-  'Can someone review this before end of day?',
-  'Found the issue — fix is on the way.',
-  'Blocked on the API changes, see the thread.',
-  'This looks done to me, moving it over.',
-  'Added notes to the doc, take a look when you can.',
-  'Picking this up after standup.',
-  'Tests are green, ready for review.',
-];
-
-function runNpcEvent(dispatch, state) {
-  const { actorId, currentWorkspaceId } = state.ui;
-  if (!state.ui.settings.npcMode) return;
-  // the npc only touches work the current user is allowed to see
-  const role = state.data.present.workspaces
-    .find((w) => w.id === currentWorkspaceId)
-    ?.members.find((m) => m.userId === actorId)?.role;
-  const isAdmin = role === 'owner' || role === 'admin';
-  const wsTasks = state.data.present.tasks.filter((t) => {
-    const p = state.data.present.projects.find((x) => x.id === t.projectId);
-    if (!p || p.workspaceId !== currentWorkspaceId || p.archived) return false;
-    if (!isAdmin && !p.memberIds.includes(actorId)) return false;
-    return true;
-  });
-  const ws = state.data.present.workspaces.find((w) => w.id === currentWorkspaceId);
-  if (!ws) return;
-  const candidates = ws.members.filter((m) => m.userId !== actorId);
-  if (!candidates.length || !wsTasks.length) return;
-
-    const npc = candidates[Math.floor(Math.random() * candidates.length)];
-    const npcId = npc.userId;
-    const npcName = state.data.present.users.find((u) => u.id === npcId)?.name ?? 'the intern';
-    const task = wsTasks[Math.floor(Math.random() * wsTasks.length)];
-    const roll = Math.random();
-
-    const base = { workspaceId: ws.id, projectId: task.projectId, taskId: task.id };
-
-    if (roll < 0.45) {
-      // npc comments
-      let body = NPC_COMMENTS[Math.floor(Math.random() * NPC_COMMENTS.length)];
-      const mentions = [];
-      if (Math.random() < 0.4 && actorId) {
-        body = `@you ${body}`;
-        mentions.push(actorId);
-      }
-      dispatch({
-        type: 'data/commentAdded',
-        payload: { id: uid('c'), taskId: task.id, projectId: task.projectId, authorId: npcId, body, mentions, createdAt: new Date().toISOString() },
-      });
-      pushActivity(dispatch, state, { ...base, actorId: npcId, type: 'comment', text: `said: "${body.slice(0, 46)}${body.length > 46 ? '…' : ''}"` });
-      // toast only when YOU are mentioned — everything else lives in the feed
-      if (mentions.includes(actorId)) {
-        pushNotification(dispatch, state, actorId, 'mentioned', `${npcName} mentioned you on "${task.title}"`, task.id);
-        dispatch(toastPushed({ tone: 'live', text: `${npcName} mentioned you on "${task.title}"` }));
-      }
-    } else if (roll < 0.75) {
-      // npc moves a task to a different column
-      const project = state.data.present.projects.find((p) => p.id === task.projectId);
-      const others = project.columns.filter((c) => c.id !== task.columnId);
-      if (!others.length) return;
-      const dest = others[Math.floor(Math.random() * others.length)];
-      dispatch({
-        type: 'data/taskPatched',
-        payload: { id: task.id, patch: { columnId: dest.id } },
-        meta: { actorId: npcId },
-      });
-      pushActivity(dispatch, state, { ...base, actorId: npcId, type: 'task', text: `moved "${task.title}" → ${dest.title}` });
-    } else if (roll < 0.9 && task.subtasks.length) {
-    // npc checks off a subtask
-    const open = task.subtasks.filter((s) => !s.done);
-    if (!open.length) return;
-    const st = open[Math.floor(Math.random() * open.length)];
-    dispatch({
-      type: 'data/subtaskToggled',
-      payload: { taskId: task.id, subtaskId: st.id, done: true },
-      meta: { actorId: npcId },
-    });
-    pushActivity(dispatch, state, { ...base, actorId: npcId, type: 'subtask', text: `checked off "${st.title}" in "${task.title}"` });
-  } else {
-    // npc vibes: reacts to a task
-    pushActivity(dispatch, state, { ...base, actorId: npcId, type: 'task', text: `reviewed "${task.title}"` });
-  }
-}
 
 /* ------------------------------ effects layer ------------------------------ */
 
@@ -138,10 +49,6 @@ const effectsMiddleware = (store) => (next) => (action) => {
   const result = next(action);
   const state = store.getState();
 
-  if (action?.type === NPC_TICK) {
-    runNpcEvent(store.dispatch, state);
-    return result;
-  }
   if (!action?.type?.startsWith('data/')) return result;
 
   const dispatch = store.dispatch;
@@ -290,6 +197,97 @@ const effectsMiddleware = (store) => (next) => (action) => {
       const { projectId, columnId, title } = action.payload;
       const p = state.data.present.projects.find((x) => x.id === projectId);
       if (p) pushActivity(dispatch, state, { workspaceId: p.workspaceId, projectId, actorId, type: 'project', text: `renamed a column to "${title}"` });
+      break;
+    }
+    case 'data/projectMessageSent': {
+      const { projectId, text, mentions } = action.payload;
+      const p = state.data.present.projects.find((x) => x.id === projectId);
+      const wsId = p?.workspaceId ?? state.ui.currentWorkspaceId;
+      pushActivity(dispatch, state, {
+        workspaceId: wsId,
+        projectId,
+        actorId,
+        type: 'comment',
+        text: `posted in ${p?.name ?? 'project'}: "${text.slice(0, 48)}${text.length > 48 ? '…' : ''}"`,
+      });
+      (mentions ?? []).forEach((mUserId) => {
+        if (mUserId !== actorId) {
+          pushNotification(
+            dispatch,
+            state,
+            mUserId,
+            'mentioned',
+            `${userName(state, actorId)} tagged you in #${p?.name ?? 'project'} discussion: "${text.slice(0, 48)}${text.length > 48 ? '…' : ''}"`,
+            null,
+            projectId
+          );
+          dispatch(toastPushed({ tone: 'live', text: `${userName(state, actorId)} tagged you in ${p?.name ?? 'project'}` }));
+        }
+      });
+      break;
+    }
+    case 'data/joinRequestCreated': {
+      const { projectId } = action.payload;
+      const p = state.data.present.projects.find((x) => x.id === projectId);
+      const wsId = p?.workspaceId ?? state.ui.currentWorkspaceId;
+      pushActivity(dispatch, state, {
+        workspaceId: wsId,
+        projectId,
+        actorId,
+        type: 'project',
+        text: `requested to join project "${p?.name ?? 'project'}"`,
+      });
+      // notify project members / admins
+      const ws = state.data.present.workspaces.find((w) => w.id === wsId);
+      const adminMembers = ws?.members.filter((m) => (m.role === 'owner' || m.role === 'admin') && m.userId !== actorId) ?? [];
+      adminMembers.forEach((adm) => {
+        pushNotification(
+          dispatch,
+          state,
+          adm.userId,
+          'assigned',
+          `${userName(state, actorId)} requested to join "${p?.name ?? 'project'}"`,
+          null,
+          projectId
+        );
+      });
+      break;
+    }
+    case 'data/joinRequestApproved': {
+      const { projectId, userId } = action.payload;
+      const p = state.data.present.projects.find((x) => x.id === projectId);
+      const wsId = p?.workspaceId ?? state.ui.currentWorkspaceId;
+      pushActivity(dispatch, state, {
+        workspaceId: wsId,
+        projectId,
+        actorId,
+        type: 'member',
+        text: `approved ${userName(state, userId)} to join project "${p?.name ?? 'project'}"`,
+      });
+      if (userId !== actorId) {
+        pushNotification(
+          dispatch,
+          state,
+          userId,
+          'assigned',
+          `Your request to join "${p?.name ?? 'project'}" was approved! You now have member access.`,
+          null,
+          projectId
+        );
+      }
+      break;
+    }
+    case 'data/projectMembersToggled': {
+      const { id: projectId, userId } = action.payload;
+      const p = state.data.present.projects.find((x) => x.id === projectId);
+      const isMemberNow = p?.memberIds.includes(userId);
+      pushActivity(dispatch, state, {
+        workspaceId: p?.workspaceId ?? state.ui.currentWorkspaceId,
+        projectId,
+        actorId,
+        type: 'member',
+        text: `${isMemberNow ? 'added' : 'removed'} ${userName(state, userId)} ${isMemberNow ? 'to' : 'from'} "${p?.name ?? 'project'}"`,
+      });
       break;
     }
     default:

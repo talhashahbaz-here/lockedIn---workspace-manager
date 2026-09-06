@@ -14,8 +14,7 @@ import { STORAGE_KEYS, dayKey, isDueSoon } from '@/config/global';
 import { lsGet, lsSet } from '@/config/persistence';
 import { onlineSet, toastPushed, detailTaskClosed, composerOpened } from '@/store/slices/uiSlice';
 import { notificationPushed } from '@/store/slices/logSlice';
-import { NPC_TICK } from '@/store';
-import { selectActorId, selectTasks, selectUI } from '@/store/selectors';
+import { selectActorId, selectTasks, selectUI, selectCanCreateTasks } from '@/store/selectors';
 import { useAuth } from './Auth';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
@@ -27,10 +26,7 @@ export function AppProvider({ children }) {
   const actorId = useSelector(selectActorId);
   const settings = useSelector((s) => s.ui.settings);
   const tasks = useSelector(selectTasks);
-  const canEditTasks = useSelector((s) => {
-    // shortcut availability: we do not gate strictly here, pages double-check
-    return Boolean(s.ui.actorId);
-  });
+  const canCreateTasks = useSelector(selectCanCreateTasks);
   const [confirmState, setConfirmState] = useState(null);
 
   /* --------------------------------- theme --------------------------------- */
@@ -78,21 +74,7 @@ export function AppProvider({ children }) {
     };
   }, [dispatch]);
 
-  /* ----------------------------- npc coworker ------------------------------ */
-  const npcRef = useRef(null);
-  useEffect(() => {
-    clearInterval(npcRef.current);
-    if (!user || !settings.npcMode) return;
-    const tick = () => dispatch({ type: NPC_TICK });
-    const schedule = () => {
-      npcRef.current = setTimeout(() => {
-        tick();
-        schedule();
-      }, 40000 + Math.random() * 40000);
-    };
-    schedule();
-    return () => clearTimeout(npcRef.current);
-  }, [user, settings.npcMode, dispatch]);
+
 
   /* --------------------------- due-soon scanner ----------------------------- */
   const dueRef = useRef(null);
@@ -155,14 +137,14 @@ export function AppProvider({ children }) {
         dispatch({ type: 'ui/paletteToggled', payload: true });
         return;
       }
-      if (e.key.toLowerCase() === 'n' && user && canEditTasks) {
+      if (e.key.toLowerCase() === 'n' && user && canCreateTasks) {
         e.preventDefault();
         dispatch(composerOpened({}));
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [dispatch, user, canEditTasks]);
+  }, [dispatch, user, canCreateTasks]);
 
   const value = useMemo(() => ({ confirm }), [confirm]);
 

@@ -28,8 +28,12 @@ export const selectCurrentWorkspace = createSelector(
 /* ------------------------------- permissions ------------------------------ */
 
 export const selectMyRole = createSelector(
-  [selectCurrentWorkspace, selectActorId], (ws, actorId) =>
-    ws?.members.find((m) => m.userId === actorId)?.role ?? null
+  [selectCurrentWorkspace, selectActorId, selectUsers], (ws, actorId, users) => {
+    const wsMember = ws?.members.find((m) => m.userId === actorId);
+    if (wsMember) return wsMember.role;
+    const u = users.find((x) => x.id === actorId);
+    return u?.role ?? 'viewer';
+  }
 );
 export const selectMyPermissions = createSelector([selectMyRole], (role) => ({
   role,
@@ -41,38 +45,72 @@ export const selectIsWorkspaceAdmin = createSelector(
 );
 
 /* ------------------------------- visibility -------------------------------
-   users see only workspaces they are a member of and, unless they are
-   owner/admin there, only projects they were added into. in the aggregated
-   task views (all tasks / calendar / search / stats), members and viewers
-   see only their own assigned tasks — owners and admins see everything.
-   a project board shows its full task list to everyone who can open it.
+   All users can see all workspaces and all projects.
+   Only users who are members of a project (or owners/admins) can view/interact
+   with tasks for that project.
+   Viewers see the project overview and can request to join.
    -------------------------------------------------------------------------- */
 
 export const selectVisibleWorkspaces = createSelector(
-  [selectWorkspaces, selectActorId],
-  (workspaces, actorId) => workspaces.filter((ws) => ws.members.some((m) => m.userId === actorId))
+  [selectWorkspaces],
+  (workspaces) => workspaces
 );
+
+export const selectUserCanAccessProjectTasks = (state, projectId) => {
+  const project = state.data.present.projects.find((p) => p.id === projectId);
+  if (!project) return false;
+  const actorId = state.ui.actorId;
+  const user = state.data.present.users.find((u) => u.id === actorId);
+  if (user?.role === 'owner' || user?.role === 'admin') return true;
+  const ws = state.data.present.workspaces.find((w) => w.id === project.workspaceId);
+  const wsRole = ws?.members.find((m) => m.userId === actorId)?.role;
+  if (wsRole === 'owner' || wsRole === 'admin') return true;
+  return (project.memberIds || []).includes(actorId);
+};
+
+export const selectCreatableProjects = (state) => {
+  const actorId = state.ui.actorId;
+  const user = state.data.present.users.find((u) => u.id === actorId);
+  const currentWsId = state.ui.currentWorkspaceId;
+  const ws = state.data.present.workspaces.find((w) => w.id === currentWsId);
+  const wsRole = ws?.members?.find((m) => m.userId === actorId)?.role ?? user?.role ?? 'viewer';
+
+  // Viewers can NEVER create tasks
+  if (wsRole === 'viewer' || user?.role === 'viewer') {
+    return [];
+  }
+
+  const isOwnerOrAdmin = wsRole === 'owner' || wsRole === 'admin' || user?.role === 'owner' || user?.role === 'admin';
+  const projects = state.data.present.projects.filter((p) => p.workspaceId === currentWsId && !p.archived);
+
+  if (isOwnerOrAdmin) {
+    return projects;
+  }
+
+  // Members can only create tasks in projects where they are in memberIds
+  return projects.filter((p) => (p.memberIds || []).includes(actorId));
+};
+
+export const selectCanCreateTasks = (state) => {
+  return selectCreatableProjects(state).length > 0;
+};
+
+export const selectCanCreateTaskInProject = (state, projectId) => {
+  const creatable = selectCreatableProjects(state);
+  return creatable.some((p) => p.id === projectId);
+};
 
 export const selectProjectIsVisible = (state, projectId) => {
   const project = state.data.present.projects.find((p) => p.id === projectId);
-  if (!project) return false;
-  if (selectIsWorkspaceAdmin(state)) return true;
-  return project.memberIds.includes(state.ui.actorId);
+  return Boolean(project);
 };
 
-// activity entries without a project (workspace/member events) pass through
-export const selectEntryIsVisible = (state, entry) => {
-  if (!entry.projectId) return true;
-  return selectProjectIsVisible(state, entry.projectId);
-};
+// activity entries
+export const selectEntryIsVisible = () => true;
 
 export const selectWorkspaceProjects = createSelector(
-  [selectProjects, selectCurrentWorkspaceId, selectIsWorkspaceAdmin, selectActorId],
-  (projects, wsId, isAdmin, actorId) => {
-    const inWs = projects.filter((p) => p.workspaceId === wsId);
-    if (isAdmin) return inWs;
-    return inWs.filter((p) => p.memberIds.includes(actorId));
-  }
+  [selectProjects, selectCurrentWorkspaceId],
+  (projects, wsId) => projects.filter((p) => p.workspaceId === wsId)
 );
 export const selectActiveWorkspaceProjects = createSelector(
   [selectWorkspaceProjects], (projects) => projects.filter((p) => !p.archived)
@@ -83,26 +121,37 @@ export const selectProjectById = (state, id) =>
 export const selectTaskById = (state, id) =>
   state.data.present.tasks.find((t) => t.id === id) ?? null;
 
+/* --------------------------- messages & requests -------------------------- */
+
+export const selectProjectMessages = (state, projectId) =>
+  (state.data.present.projectMessages ?? []).filter((m) => m.projectId === projectId);
+
+export const selectProjectJoinRequests = (state, projectId) =>
+  (state.data.present.joinRequests ?? []).filter((r) => r.projectId === projectId);
+
+export const selectPendingJoinRequests = (state) =>
+  (state.data.present.joinRequests ?? []).filter((r) => r.status === 'pending');
+
 /* --------------------------------- tasks ---------------------------------- */
 
 export const selectProjectTasks = createSelector(
-  [selectTasks, (state, projectId) => projectId],
-  (tasks, projectId) =>
-    tasks
+  [selectTasks, (state, projectId) => projectId, (state) => state],
+  (tasks, projectId, state) => {
+    if (!selectUserCanAccessProjectTasks(state, projectId)) return [];
+    return tasks
       .filter((t) => t.projectId === projectId)
       .slice()
-      .sort((a, b) => a.order - b.order)
+      .sort((a, b) => a.order - b.order);
+  }
 );
 
-// tasks across the projects visible to the current user; members/viewers
-// only get their own assigned tasks here (boards show full project tasks)
 export const selectWorkspaceTasks = createSelector(
-  [selectTasks, selectWorkspaceProjects, selectIsWorkspaceAdmin, selectActorId],
-  (tasks, projects, isAdmin, actorId) => {
-    const ids = new Set(projects.map((p) => p.id));
-    const inProjects = tasks.filter((t) => ids.has(t.projectId));
-    if (isAdmin) return inProjects;
-    return inProjects.filter((t) => t.assigneeId === actorId);
+  [selectTasks, selectWorkspaceProjects, (state) => state],
+  (tasks, projects, state) => {
+    const allowedProjectIds = new Set(
+      projects.filter((p) => selectUserCanAccessProjectTasks(state, p.id)).map((p) => p.id)
+    );
+    return tasks.filter((t) => allowedProjectIds.has(t.projectId));
   }
 );
 

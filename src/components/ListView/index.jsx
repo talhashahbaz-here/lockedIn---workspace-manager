@@ -6,11 +6,12 @@ import { ArrowUpDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { priorityOf, friendlyDate, isOverdue } from '@/config/global';
 import { sortSet, detailTaskOpened } from '@/store/slices/uiSlice';
 import { taskCheckToggled } from '@/store/state-helpers';
-import { groupTasks } from '@/store/selectors';
+import { groupTasks, selectActorId } from '@/store/selectors';
 import Avatar from '../Avatar';
 
 export default function ListView({ tasks, users, project, columns: columnsProp = [], groupBy }) {
   const dispatch = useDispatch();
+  const actorId = useSelector(selectActorId);
   const sort = useSelector((s) => s.ui.sort);
   const [collapsed, setCollapsed] = useState({});
 
@@ -38,9 +39,16 @@ export default function ListView({ tasks, users, project, columns: columnsProp =
             type="checkbox"
             className="check"
             checked={Boolean(t.completedAt)}
+            disabled={!t.completedAt && t.assigneeId !== actorId}
             onClick={(e) => e.stopPropagation()}
-            onChange={() => dispatch(taskCheckToggled(t))}
-            title={t.completedAt ? 'reopen' : 'mark shipped'}
+            onChange={() => dispatch(taskCheckToggled(t, project))}
+            title={
+              !t.completedAt && t.assigneeId !== actorId
+                ? 'Only the assigned user can mark this task complete'
+                : t.completedAt
+                ? 'reopen'
+                : 'mark shipped'
+            }
           />
         </td>
         <td className={`td-title ${t.completedAt ? 'done' : ''}`}>{t.title}</td>

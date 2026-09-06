@@ -11,13 +11,13 @@ const FEATURES = [
   { icon: '👥', title: 'roles with range', body: 'owner, admin, member, viewer. viewers can look but not touch — boundaries are healthy.' },
   { icon: '💬', title: 'comments + @mentions', body: 'argue about spacing directly on the task. mention your coworkers so they cannot escape.' },
   { icon: '🔔', title: 'notifications, no spam', body: 'assigned, mentioned, due soon — you choose which pings earn the right to reach you.' },
-  { icon: '📡', title: 'npc coworkers', body: 'fake teammates post comments and move cards so the workspace feels alive. mute them if you must.' },
+  { icon: '🪵', title: 'realtime activity log', body: 'every single action in your workspace is recorded in a live activity sidebar stream.' },
   { icon: '💾', title: 'offline? unbothered', body: 'everything is stored locally. export/import json, fake a sync, keep working in a bunker.' },
 ];
 
 const STEPS = [
-  { n: '01', title: 'make an account (or speedrun it)', body: 'sign up, or one-tap into a mock profile. no emails, no verification, no trauma.' },
-  { n: '02', title: 'spawn a workspace', body: 'create a space, invite the imaginary team, pick an emoji and a color that matches your aura.' },
+  { n: '01', title: 'sign into your accounts', body: 'log into owner, admin, member or viewer accounts. switch between multiple accounts anytime.' },
+  { n: '02', title: 'spawn a workspace', body: 'create a space, invite the team, pick an emoji and a color that matches your aura.' },
   { n: '03', title: 'lock in', body: 'brain-dump tasks, drag them across the board, ship them, dunk on the stats page. repeat forever.' },
 ];
 

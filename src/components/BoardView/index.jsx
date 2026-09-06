@@ -10,18 +10,23 @@ import EmptyState from '../EmptyState';
 import { useApp } from '@/context/AppProvider';
 import { uid } from '@/config/global';
 import {
-  taskAdded, moveTaskOptimistic,
+  taskAdded, taskPatched, moveTaskOptimistic,
   columnAdded, columnRenamed, columnDeleted, columnMoved,
 } from '@/store/slices/dataSlice';
 import { toastPushed, loadingSet } from '@/store/slices/uiSlice';
-import { selectVisibleProjectTasks, selectMyPermissions } from '@/store/selectors';
+import { selectVisibleProjectTasks, selectMyPermissions, selectActorId } from '@/store/selectors';
 
 export default function BoardView({ project }) {
   const dispatch = useDispatch();
   const { confirm } = useApp();
+  const actorId = useSelector(selectActorId);
   const tasks = useSelector((s) => selectVisibleProjectTasks(s, project.id));
   const perms = useSelector(selectMyPermissions);
   const loading = useSelector((s) => s.ui.loading[`board-${project.id}`]);
+  const actor = useSelector((s) => s.data.present.users.find((u) => u.id === actorId));
+  const isViewer = actor?.role === 'viewer' || perms.role === 'viewer';
+  const isOwnerOrAdmin = perms.role === 'owner' || perms.role === 'admin' || actor?.role === 'owner' || actor?.role === 'admin';
+  const canCreateInProject = !isViewer && (isOwnerOrAdmin || (project?.memberIds || []).includes(actorId));
 
   const [drag, setDrag] = useState(null); // {taskId, fromColumn}
   const [overCol, setOverCol] = useState(null);
@@ -47,15 +52,48 @@ export default function BoardView({ project }) {
   const dropOnColumn = (columnId) => {
     setOverCol(null);
     if (!drag) return;
+    const destCol = project.columns.find((c) => c.id === columnId);
+    const isDoneCol = destCol && /done|shipped/i.test(destCol.title);
+    const draggedTask = tasks.find((t) => t.id === drag.taskId);
+
+    if (isDoneCol && draggedTask && !draggedTask.completedAt && draggedTask.assigneeId !== actorId) {
+      dispatch(
+        toastPushed({
+          tone: 'warn',
+          text: 'You cannot mark a task complete (move to done) unless it is assigned to you.',
+        })
+      );
+      setDrag(null);
+      return;
+    }
+
     const columnTasks = (byColumn.get(columnId) ?? []).filter((t) => t.id !== drag.taskId);
     const order = columnTasks.length ? (columnTasks[columnTasks.length - 1].order ?? 0) + 1 : 0;
     dispatch(moveTaskOptimistic({ id: drag.taskId, columnId, order }));
+    if (isDoneCol && draggedTask && !draggedTask.completedAt) {
+      dispatch(taskPatched({ id: drag.taskId, patch: { completedAt: new Date().toISOString() } }));
+    }
     setDrag(null);
   };
 
   const dropOnCard = (columnId, index) => {
     setOverCol(null);
     if (!drag) return;
+    const destCol = project.columns.find((c) => c.id === columnId);
+    const isDoneCol = destCol && /done|shipped/i.test(destCol.title);
+    const draggedTask = tasks.find((t) => t.id === drag.taskId);
+
+    if (isDoneCol && draggedTask && !draggedTask.completedAt && draggedTask.assigneeId !== actorId) {
+      dispatch(
+        toastPushed({
+          tone: 'warn',
+          text: 'You cannot mark a task complete (move to done) unless it is assigned to you.',
+        })
+      );
+      setDrag(null);
+      return;
+    }
+
     const columnTasks = (byColumn.get(columnId) ?? []).filter((t) => t.id !== drag.taskId);
     const before = columnTasks[index - 1];
     const after = columnTasks[index];
@@ -65,12 +103,19 @@ export default function BoardView({ project }) {
     else if (after) order = (after.order ?? 0) - 1;
     else order = 0;
     dispatch(moveTaskOptimistic({ id: drag.taskId, columnId, order }));
+    if (isDoneCol && draggedTask && !draggedTask.completedAt) {
+      dispatch(taskPatched({ id: drag.taskId, patch: { completedAt: new Date().toISOString() } }));
+    }
     setDrag(null);
   };
 
   const spawnInline = (columnId) => {
     const title = composerText.trim();
     if (!title) return;
+    if (!canCreateInProject) {
+      dispatch(toastPushed({ tone: 'warn', text: 'You can only create tasks in projects you are a member of.' }));
+      return;
+    }
     const columnTasks = byColumn.get(columnId) ?? [];
     dispatch(
       taskAdded({
@@ -86,7 +131,7 @@ export default function BoardView({ project }) {
         labels: [],
         subtasks: [],
         attachments: [],
-        createdById: null,
+        createdById: actorId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         completedAt: null,
@@ -243,7 +288,7 @@ export default function BoardView({ project }) {
                     </button>
                   </div>
                 </div>
-              ) : perms.can('editTasks') ? (
+              ) : canCreateInProject ? (
                 <button type="button" className="btn btn-sm btn-block board-add-btn" onClick={() => { setComposer(col.id); setComposerText(''); }}>
                   <Plus size={12} strokeWidth={2.5} /> add task
                 </button>

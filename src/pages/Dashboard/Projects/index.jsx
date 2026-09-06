@@ -17,7 +17,7 @@ import {
 import { toastPushed } from '@/store/slices/uiSlice';
 import {
   selectActiveWorkspaceProjects, selectWorkspaceProjects,
-  selectCurrentWorkspaceId, selectUsers, selectMyPermissions, selectWorkspaceTasks,
+  selectCurrentWorkspaceId, selectUsers, selectMyPermissions, selectWorkspaceTasks, selectActorId,
 } from '@/store/selectors';
 import { useApp } from '@/context/AppProvider';
 
@@ -196,6 +196,7 @@ export default function Projects() {
   const navigate = useNavigate();
   const { confirm } = useApp();
   const perms = useSelector(selectMyPermissions);
+  const actorId = useSelector(selectActorId);
   const active = useSelector(selectActiveWorkspaceProjects);
   const all = useSelector(selectWorkspaceProjects);
   const users = useSelector(selectUsers);
@@ -294,6 +295,11 @@ export default function Projects() {
                     <span className="board-col-count">{counts.get(p.id) ?? 0} tasks</span>
                     <span className="board-col-count">{p.columns.length} lanes</span>
                     {p.archived && <span className="tag tag-red">archived</span>}
+                    {p.memberIds.includes(actorId) ? (
+                      <span className="tag tag-blue">member</span>
+                    ) : (
+                      <span className="tag tag-yellow">viewer</span>
+                    )}
                   </div>
                   <div className="project-card-meta">
                     <span className="project-avatars">
@@ -325,7 +331,7 @@ export default function Projects() {
 
       {!perms.can('manageProjects') && (
         <div className="access-denied">
-          🔒 heads up: as <b>{perms.role}</b> you can work on tasks, but only admins and owners can create, archive or delete projects.
+          🔒 As a <b>{perms.role}</b>, you have read-only overview access. Only owners and admins can create, edit, or delete projects. Viewers can request to join projects to work on tasks.
         </div>
       )}
 
