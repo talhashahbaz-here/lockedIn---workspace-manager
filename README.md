@@ -80,8 +80,8 @@ Try **trent smith** (viewer) to see permission-gated UI, or switch workspaces fr
 - [x] bulk actions — multi-select → change status / assignee / delete
 
 ### 🎛️ views (same data, multiple representations)
-- [x] kanban board view with drag-and-drop between (and within) columns
-- [x] custom / reorderable kanban columns per project (add, rename, delete, drag-grip to reorder)
+- [ ] kanban board view with drag-and-drop between (and within) columns
+- [ ] custom / reorderable kanban columns per project (add, rename, delete, drag-grip to reorder)
 - [x] list / table view with sortable columns
 - [x] calendar view showing tasks by due date (drag a task onto a day to reschedule)
 - [x] last-used view persisted per project
